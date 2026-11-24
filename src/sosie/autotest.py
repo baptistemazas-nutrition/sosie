@@ -1,4 +1,5 @@
 import datetime as dt
+import os
 import sqlite3
 import subprocess
 import tempfile
@@ -7,6 +8,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from .config import coffre_ferme, fermer_coffre, ouvrir_coffre
 from .fiche import rediger_fiche
 from .formats import destination_de, ecrire_fichier, environnement_r, lire_fichier, lister_fichiers, trouver_rscript
 from .generation import fabriquer_sosie
@@ -132,6 +134,19 @@ def lancer():
             controle(r.stdout.strip() == "factor", "fichier R écrit avec R (facteurs conservés)")
         else:
             print("  · R n'est pas installé : test des fichiers R ignoré (installe R si tu l'utilises)")
+        faux = Path(tmp) / "coffre_essai"
+        (faux / "projet").mkdir(parents=True)
+        (faux / "projet" / "vraies.csv").write_text("id;nom\n1;NOMREEL\n", encoding="utf-8")
+        fermer_coffre(faux, forcer=True)
+        ferme = coffre_ferme(faux)
+        lisible = True
+        if ferme and os.geteuid() != 0:
+            try:
+                (faux / "projet" / "vraies.csv").read_text(encoding="utf-8")
+            except PermissionError:
+                lisible = False
+        ouvrir_coffre(faux)
+        controle(ferme and (not lisible or os.geteuid() == 0), "coffre fermé à clé : illisible pour les autres programmes")
     echecs = [m for ok, m in resultats if not ok]
     print()
     print("Tout fonctionne." if not echecs else f"{len(echecs)} problème(s) : copie ce message à l'IA.")

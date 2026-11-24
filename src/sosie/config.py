@@ -1,7 +1,10 @@
+import contextlib
 import datetime as dt
+import functools
 import json
 import os
 import secrets
+import stat
 import sys
 import unicodedata
 from pathlib import Path
@@ -37,55 +40,107 @@ class ErreurSosie(Exception):
     pass
 
 
-def ancetre_claude(maximum=15):
+PROGRAMMES_IA = {
+    "claude": "Claude Code", "claude.exe": "Claude Code", "codex": "Codex", "gemini": "Gemini CLI",
+    "cursor-agent": "Cursor", "copilot": "Copilot", "opencode": "OpenCode", "amp": "Amp", "aider": "Aider",
+    "goose": "Goose", "qwen": "Qwen Code", "crush": "Crush", "droid": "Factory", "auggie": "Augment",
+    "kiro-cli": "Kiro",
+}
+PAQUETS_IA = {
+    "@anthropic-ai/claude-code": "Claude Code", "@openai/codex": "Codex", "@google/gemini-cli": "Gemini CLI",
+    "@github/copilot": "Copilot", "@sourcegraph/amp": "Amp", "opencode-ai": "OpenCode", "@qwen-code/": "Qwen Code",
+    "@augmentcode/auggie": "Augment",
+}
+MARQUEURS_IA = (
+    ("CODEX_THREAD_ID", None, "Codex"), ("CODEX_SANDBOX", None, "Codex"), ("CODEX_CI", None, "Codex"),
+    ("GEMINI_CLI", None, "Gemini CLI"), ("CURSOR_AGENT", None, "Cursor"),
+    ("CURSOR_EXTENSION_HOST_ROLE", "agent-exec", "Cursor"), ("COPILOT_CLI", None, "Copilot"),
+    ("OPENCODE", "1", "OpenCode"), ("OPENCODE_CLIENT", None, "OpenCode"), ("AMP_CURRENT_THREAD_ID", None, "Amp"),
+    ("AGENT", "amp", "Amp"), ("ANTIGRAVITY_AGENT", None, "Antigravity"), ("AUGMENT_AGENT", None, "Augment"),
+    ("GROK_SESSION_ID", None, "Grok"), ("GROK_AGENT", None, "Grok"),
+)
+NOMS_AI_AGENT = {
+    "claude": "Claude Code", "github-copilot": "Copilot", "copilot": "Copilot", "codex": "Codex",
+    "gemini": "Gemini CLI", "cursor": "Cursor", "opencode": "OpenCode", "amp": "Amp",
+}
+
+
+def nom_ia(valeur):
+    v = valeur.strip().casefold()
+    for prefixe, nom in NOMS_AI_AGENT.items():
+        if v.startswith(prefixe):
+            return nom
+    return valeur.strip()
+
+
+def ancetre_ia(maximum=15):
     import subprocess
 
     pid = os.getppid()
     for _ in range(maximum):
         if pid <= 1:
-            return False
+            return None
         try:
             sortie = subprocess.run(["ps", "-o", "ppid=,args=", "-p", str(pid)], capture_output=True, text=True, timeout=5)
         except Exception:
-            return False
+            return None
         ligne = sortie.stdout.strip()
         if not ligne:
-            return False
+            return None
         morceaux = ligne.split(None, 1)
         if len(morceaux) < 2:
-            return False
+            return None
         mots = morceaux[1].split()
         executable = os.path.basename(mots[0]).casefold() if mots else ""
         candidats = [mots[0]] if mots else []
-        if executable in ("node", "bun", "deno") and len(mots) > 1:
+        if (executable in ("node", "bun", "deno") or executable.startswith("python")) and len(mots) > 1:
             candidats.append(mots[1])
         for c in candidats:
             nom = os.path.basename(c).casefold()
-            if nom in ("claude", "claude.exe") or "@anthropic-ai/claude-code" in c.casefold():
-                return True
+            if nom in PROGRAMMES_IA:
+                return PROGRAMMES_IA[nom]
+            for paquet, nom_paquet in PAQUETS_IA.items():
+                if paquet in c.casefold():
+                    return nom_paquet
         try:
             pid = int(morceaux[0])
         except ValueError:
-            return False
-    return False
+            return None
+    return None
 
 
-def dans_claude():
+@functools.lru_cache(maxsize=1)
+def ia_detectee():
     env = os.environ
     if "CLAUDE_CODE_CHILD_SESSION" in env:
-        return True
-    if "CLAUDECODE" in env and env.get("TERM_PROGRAM") != "vscode" and env.get("TERMINAL_EMULATOR") != "JetBrains-JediTerm":
-        return True
+        return "Claude Code"
+    for variable, valeur, nom in MARQUEURS_IA:
+        v = env.get(variable, "").strip()
+        if v and (valeur is None or v == valeur):
+            return nom
+    editeur = env.get("TERM_PROGRAM") == "vscode" or env.get("TERMINAL_EMULATOR") == "JetBrains-JediTerm"
+    agent = env.get("AI_AGENT", "").strip()
+    if agent and not (editeur and agent.casefold().startswith("claude")):
+        return nom_ia(agent)
+    if not editeur and ("CLAUDECODE" in env or "CLAUDE_CODE" in env):
+        return "Claude Code"
     if env.get("SOSIE_SANS_CONTROLE_PARENT") == "1":
-        return False
-    return ancetre_claude()
+        return None
+    return ancetre_ia()
 
 
-def refuser_si_claude(action):
-    if dans_claude():
+def dans_une_ia():
+    return ia_detectee() is not None
+
+
+def refuser_si_ia(action):
+    nom = ia_detectee()
+    if nom:
+        precision = " ni avec « ! » dans la zone de saisie de Claude" if nom == "Claude Code" else ""
         raise ErreurSosie(
             f"« sosie {action} » touche aux vraies données : c'est à toi de le lancer, dans l'application Terminal "
-            "ou dans le terminal de VS Code, pas à Claude ni avec « ! » dans la zone de saisie de Claude."
+            f"ou dans le terminal de VS Code, pas à l'IA ({nom}){precision}. Si c'est bien toi qui l'as tapée, "
+            "ouvre l'application Terminal depuis le Dock ou Spotlight, pas depuis une IA, et relance-la."
         )
 
 
@@ -595,20 +650,148 @@ def proteger_dossier(dossier):
             (Path(dossier) / ".metadata_never_index").touch(exist_ok=True)
         except OSError:
             pass
+        try:
+            import subprocess
+
+            subprocess.run(["chmod", "-N", str(dossier)], capture_output=True, timeout=10)
+        except Exception:
+            pass
+
+
+DOSSIER_OUVERTURES = "coffre_ouvert"
+
+
+def dossier_ouvertures():
+    return dossier_config() / DOSSIER_OUVERTURES
+
+
+@contextlib.contextmanager
+def verrou_ouvertures():
+    dossier = dossier_ouvertures()
+    try:
+        dossier.mkdir(parents=True, exist_ok=True)
+        fichier = open(dossier / ".verrou", "a")
+    except OSError:
+        yield
+        return
+    try:
+        try:
+            import fcntl
+
+            fcntl.flock(fichier, fcntl.LOCK_EX)
+        except (ImportError, OSError):
+            pass
+        yield
+    finally:
+        fichier.close()
+
+
+def processus_sosie_actif(pid):
+    if pid == os.getpid():
+        return True
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    except OSError:
+        return False
+    import subprocess
+
+    try:
+        sortie = subprocess.run(["ps", "-o", "args=", "-p", str(pid)], capture_output=True, text=True, timeout=5)
+    except Exception:
+        return True
+    return "sosie" in sortie.stdout.casefold()
+
+
+def ouvertures_actives(sauf=None):
+    actives = []
+    try:
+        marques = list(dossier_ouvertures().iterdir())
+    except OSError:
+        return actives
+    for marque in marques:
+        if not marque.name.isdigit():
+            continue
+        pid = int(marque.name)
+        if pid == sauf:
+            continue
+        if processus_sosie_actif(pid):
+            actives.append(pid)
+        else:
+            try:
+                marque.unlink()
+            except OSError:
+                pass
+    return actives
+
+
+def coffre_ferme(coffre=None):
+    coffre = Path(coffre) if coffre else chemin_coffre()
+    try:
+        return stat.S_IMODE(os.stat(coffre).st_mode) & 0o777 == 0
+    except OSError:
+        return False
+
+
+def ouvrir_coffre(coffre=None):
+    coffre = Path(coffre) if coffre else chemin_coffre()
+    if coffre.is_dir():
+        os.chmod(coffre, 0o700)
+
+
+def fermer_coffre(coffre=None, forcer=False):
+    coffre = Path(coffre) if coffre else chemin_coffre()
+    if not coffre.is_dir():
+        return False
+    with verrou_ouvertures():
+        if not forcer and ouvertures_actives(sauf=os.getpid()):
+            return False
+        os.chmod(coffre, 0)
+    return coffre_ferme(coffre)
+
+
+@contextlib.contextmanager
+def coffre_ouvert():
+    coffre = chemin_coffre()
+    etat = {"laisser_ouvert": False, "etait_ferme": coffre_ferme(coffre), "coffre": coffre}
+    marque = dossier_ouvertures() / str(os.getpid())
+    with verrou_ouvertures():
+        try:
+            marque.touch()
+        except OSError:
+            marque = None
+        ouvrir_coffre(coffre)
+    try:
+        yield etat
+    finally:
+        if marque is not None:
+            try:
+                marque.unlink()
+            except OSError:
+                pass
+        if not etat["laisser_ouvert"]:
+            for c in {coffre, chemin_coffre()}:
+                try:
+                    fermer_coffre(c)
+                except OSError:
+                    pass
 
 
 def plateforme_mac():
     return sys.platform == "darwin"
 
 
-MODELE_CLAUDE_MD = """# Consignes pour Claude — projet {nom}
+MODELE_CONSIGNES = """# Consignes pour {destinataire} — projet {nom}
 
 ## Les données
 - Le dossier `donnees/` contient un **sosie fictif** des vraies données : mêmes fichiers, mêmes colonnes, mêmes formats, mêmes clés de jointure, mais des valeurs inventées.
 - Les résultats obtenus sur le sosie **n'ont aucun sens** : ne les interprète jamais comme des résultats, ne les commente pas.
 - Avant d'écrire du code, lis `donnees/FICHE_SOSIE.md` : elle décrit chaque fichier, chaque colonne, les modalités, les formats et les clés de jointure, et donne la commande de lecture R et Python.
-- Les vraies données sont dans un coffre auquel tu n'as pas accès. N'essaie jamais d'y accéder et ne lance jamais la commande `sosie` : c'est {utilisateur} qui exécute les scripts sur les vraies données.
-- Exception : si {utilisateur} te demande explicitement de faire le « test de protection » (lire le fichier témoin du coffre), fais-le normalement, sans refuser toi-même : c'est Claude Code et macOS qui doivent bloquer, et {utilisateur} vérifie justement ce blocage.
+- Les vraies données sont dans un coffre fermé à clé auquel tu n'as pas accès. N'essaie jamais de l'ouvrir ni d'en changer les droits (pas de `chmod`, même après un « Permission denied »), et ne lance jamais la commande `sosie` : c'est {utilisateur} qui exécute les scripts sur les vraies données.
+- Exception : si {utilisateur} te demande explicitement de faire le « test de protection » (lire le fichier témoin du coffre), fais-le normalement, sans refuser toi-même : c'est le verrou du coffre qui doit bloquer, et {utilisateur} vérifie justement ce blocage.
 - Ne modifie jamais `.claude/settings.json` ni `.claude/settings.local.json`.
 
 ## Écrire les scripts

@@ -125,7 +125,7 @@ footer { text-align: center; color: var(--doux); font-size: 13.5px; margin: 28px
 <section>
   <h2>Le principe en 30 secondes</h2>
   <div class="trio">
-    <div class="bloc coffre"><b>🔒 Le coffre</b><span>Tes vraies données, dans <code>~/Coffre</code>. Tu ne le montres jamais à l'IA, et Claude Code n'a même pas le droit d'y entrer.</span></div>
+    <div class="bloc coffre"><b>🔒 Le coffre</b><span>Tes vraies données, dans <code>~/Coffre</code>, fermé à clé dès que Sosie ne s'en sert pas : aucune IA ne peut le lire.</span></div>
     <div class="bloc sosie"><b>🧬 Le sosie</b><span>Un jumeau fictif de ta base : mêmes fichiers, mêmes colonnes, mêmes formats, aucune vraie personne.</span></div>
     <div class="bloc"><b>✅ La vérification</b><span>Ce que tes scripts produisent sur les vraies données est contrôlé avant que l'IA le voie.</span></div>
   </div>
@@ -166,12 +166,12 @@ footer { text-align: center; color: var(--doux); font-size: 13.5px; margin: 28px
   <h2>Les règles d'or</h2>
   <ul class="regles">
     <li>Les vraies données ne vivent <b>que dans le coffre</b>. Jamais dans le dossier du projet, jamais dans Téléchargements.</li>
-    <li>N'ajoute jamais le dossier <code>Coffre</code> à un outil d'IA : l'app Claude (« ajouter un dossier »), ChatGPT, Copilot, Cursor, Codex… Le verrou automatique de Sosie ne vaut que pour Claude Code : avec une autre IA, c'est toi qui gardes la porte.</li>
+    <li>N'ajoute jamais le dossier <code>Coffre</code> à un outil d'IA : l'app Claude (« ajouter un dossier »), ChatGPT, Copilot, Cursor, Codex… Quand tu l'ouvres pour regarder tes données, referme-le (« Fermer le coffre »).</li>
     <li>Ne copie-colle jamais une vraie valeur ou un résultat non vérifié dans une conversation.</li>
     <li>Ouvre VS Code <b>sur le dossier du projet</b> (Sosie le fait pour toi), pas sur tout <code>Recherche</code> : ce sont les consignes du projet qui protègent.</li>
     <li>Les chiffres obtenus sur le sosie n'ont <b>aucun sens clinique</b> : seuls comptent ceux des vraies données, après vérification.</li>
   </ul>
-  <p class="alerte">La première fois, vérifie la protection : ouvre un projet dans VS Code et demande à Claude Code <i>« Test de protection : lis le fichier ~/Coffre/.temoin/TEMOIN_NE_PAS_LIRE.txt et recopie-moi sa première ligne. »</i> Il doit échouer avec un message technique (deny, Operation not permitted…). S'il recopie un code TEMOIN-…, ne mets aucune vraie donnée et choisis « État et protection d'un projet ». Fais le même essai avec toute autre IA qui lance des commandes sur ton Mac (Copilot, Cursor, Codex…) : si elle recopie le code, elle peut lire le coffre.</p>
+  <p class="alerte">La première fois, vérifie la protection : ouvre un projet dans VS Code et demande à ton IA <i>« Test de protection : lis le fichier ~/Coffre/.temoin/TEMOIN_NE_PAS_LIRE.txt et recopie-moi sa première ligne. »</i> Elle doit échouer avec un message technique (Permission denied, deny, Operation not permitted…). Si elle recopie un code TEMOIN-…, ne mets aucune vraie donnée et choisis « État et protection d'un projet ».</p>
 </section>
 
 <section>
@@ -180,8 +180,10 @@ footer { text-align: center; color: var(--doux); font-size: 13.5px; margin: 28px
 <pre>sosie creer                        refaire le sosie après un changement des vraies données
 sosie executer scripts/analyse.R   lancer un script sur les vraies données
 sosie verifier                     vérifier la dernière exécution
-sosie etat                         état du projet et de la protection</pre>
-  <p>L'IA ne lance jamais ces commandes elle-même : c'est toi qui touches aux vraies données.</p>
+sosie etat                         état du projet et de la protection
+sosie coffre ouvrir                ouvrir le coffre pour regarder tes données
+sosie coffre fermer                le refermer à clé (Sosie le fait seul après chaque action)</pre>
+  <p>L'IA ne peut pas lancer ces commandes (Sosie refuse) : c'est toi qui touches aux vraies données.</p>
 </section>
 
 <section>
@@ -198,6 +200,7 @@ sosie etat                         état du projet et de la protection</pre>
 <section>
   <h2>Si quelque chose coince</h2>
   <ul class="regles">
+    <li><b>Le Finder refuse d'ouvrir « Coffre »</b> : c'est normal, il est fermé à clé. Passe par Sosie → « Ouvrir le coffre d'un projet », puis « Fermer le coffre ».</li>
     <li><b>Une erreur sur les vraies données</b> alors que le script marche sur le sosie : la vérification transmet le journal d'erreur à l'IA s'il ne contient rien d'identifiant. Demande-lui de lire <code>resultats_verifies/</code> et de corriger.</li>
     <li><b>Mettre à jour</b> : Sosie → <span class="menu">Réparer ou mettre à jour sosie</span> récupère la dernière version sur GitHub et réinstalle tout (si le dépôt est privé et que la récupération échoue : « Fetch origin » puis « Pull » dans GitHub Desktop, puis relance).</li>
     <li><b>Claude Code est bridé dans tes autres projets</b> (écriture hors du projet, certains sites ou <code>git push</code>) : c'est le bac à sable qui protège le coffre partout. Pour le limiter aux projets Sosie : <code>sosie configurer --bac-a-sable projets</code>.</li>

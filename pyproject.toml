@@ -1,6 +1,6 @@
 [project]
 name = "sosie"
-version = "1.2.1"
+version = "1.3.0"
 description = "Fabrique un sosie fictif de données de recherche pour travailler avec l'IA sans lui montrer les vraies données."
 readme = "LISEZMOI.md"
 requires-python = ">=3.12"

@@ -2,8 +2,8 @@
 
 ## Le principe
 
-Tes vraies données restent dans un **coffre** (`~/Coffre`) que tu ne montres jamais à l'IA (Claude Code n'a
-même pas le droit de le lire ni de le modifier).
+Tes vraies données restent dans un **coffre** (`~/Coffre`) **fermé à clé** : `sosie` ne l'ouvre que le temps de
+ses propres actions, puis le referme. Aucune IA, ni aucun autre programme, ne peut le lire.
 `sosie` fabrique un **sosie** de chaque base : mêmes fichiers, mêmes colonnes, mêmes formats, mêmes clés
 de jointure, mais des valeurs inventées. L'IA écrit et teste les scripts sur le sosie. C'est ensuite toi qui
 lances le même script sur les vraies données, en une commande.
@@ -41,32 +41,37 @@ ordinaires, sans aucune vraie donnée.
 - Une **IA de discussion** (ChatGPT, Le Chat de Mistral, Gemini, l'application Claude…) écrit le script à partir de
   la fiche, que tu lui donnes ; tu l'enregistres dans le projet et tu le testes sur le sosie.
 
-Les consignes de travail (où lire, où écrire, petits effectifs…) sont dans le `CLAUDE.md` du projet : Claude Code
-les lit tout seul ; demande aux autres de le lire d'abord.
+Les consignes de travail (où lire, où écrire, petits effectifs…) sont écrites dans trois fichiers du projet, que
+chaque IA lit d'elle-même : `CLAUDE.md` (Claude Code), `AGENTS.md` (Copilot, Cursor, Codex et la plupart des
+autres) et `GEMINI.md` (Gemini). À une IA de discussion, donne `AGENTS.md` avec la fiche.
 
-Une différence à connaître : le **verrou automatique** du coffre (règles d'interdiction, bac à sable, refus de
-lancer `sosie`) est réglé pour Claude Code. Une autre IA qui lance des commandes sur ton Mac pourrait techniquement
-ouvrir `~/Coffre` : ne lui donne jamais le coffre, refuse toute commande qui le vise, et fais-lui l'essai 1 de
-« La protection ».
+La protection vaut pour toutes les IA :
+- le **coffre est fermé à clé** (ses droits d'accès sont retirés) dès que `sosie` ne s'en sert pas ;
+- `sosie` **refuse de tourner quand c'est une IA qui le lance** (Claude Code, Codex, Copilot, Cursor, Gemini,
+  OpenCode, Amp, Aider…) : c'est toi qui touches aux vraies données ;
+- avec Claude Code s'ajoutent des **règles d'interdiction** et un **bac à sable** (voir « La protection »).
 
 ## Installation (une seule fois)
 
 Il te faut macOS 12 ou plus récent et Internet (ta box plutôt que le réseau de l'hôpital). Ni Xcode ni Python.
 
-1. Double-clique sur `sosie.zip` (mets d'abord à la corbeille un ancien dossier `sosie`).
-2. Ouvre l'application **Terminal**, tape `sh ` (avec l'espace), fais glisser le fichier `installer.sh` du dossier
-   décompressé dans la fenêtre, puis appuie sur Entrée. Ne double-clique pas sur `installer.sh`.
-3. Si macOS demande l'accès au dossier Téléchargements, clique sur **Autoriser**.
-4. Quand « Installation terminée » s'affiche, ferme la fenêtre, ouvre-en une nouvelle et tape `sosie` : l'aide s'affiche.
+1. Récupère le dossier `sosie` : dans GitHub Desktop, *File → Clone Repository… → URL*
+   `https://github.com/baptistemazas-nutrition/sosie` (ou télécharge l'archive ZIP depuis le site et décompresse-la).
+2. Double-clique sur **`Installer Sosie.command`** (archive ZIP : clic droit → Ouvrir → Ouvrir). Une fenêtre de
+   Terminal installe l'outil, le coffre, la protection et l'application **Sosie**, puis fait un essai complet.
+3. Si macOS demande l'accès à un dossier, clique sur **Autoriser**.
+4. Quand « Installation terminée » s'affiche, ferme la fenêtre et ouvre l'application **Sosie** (Dock, Launchpad).
+
+Outil seul, sans l'application : dans le Terminal, place-toi dans le dossier puis tape `sh installer.sh`.
 
 L'installation télécharge `uv` (gestionnaire Python) puis Python 3.12 et les bibliothèques, crée le coffre
-`~/Coffre` (accessible à toi seul), règle Claude Code (voir « La protection » plus bas ; une sauvegarde de tes
+`~/Coffre` et le ferme à clé, règle Claude Code (voir « La protection » plus bas ; une sauvegarde de tes
 réglages est faite) et lance `sosie autotest`, qui vérifie sur des données d'essai que tout fonctionne.
 
-Mise à jour : même procédure avec le nouveau `sosie.zip`, puis `sosie creer` dans chaque projet (le sosie est
-refait avec la nouvelle version et les consignes de `CLAUDE.md` sont mises à jour).
-Désinstallation : `sosie desinstaller` (retire les réglages ajoutés à Claude Code ; le coffre n'est pas touché),
-puis `uv tool uninstall sosie`.
+Mise à jour : Sosie → « Réparer ou mettre à jour sosie », puis « Refaire le sosie d'un projet » pour chaque projet
+(le sosie est refait avec la nouvelle version et les consignes pour l'IA sont mises à jour).
+Désinstallation : `sosie desinstaller` (retire les réglages ajoutés à Claude Code et rouvre le coffre, sans le
+supprimer), puis `uv tool uninstall sosie`.
 
 ## Premier essai en 5 minutes (données d'exemple)
 
@@ -96,8 +101,9 @@ Les vrais résultats (ici, ceux des données d'exemple) arrivent dans `resultats
    cd ~/Documents/Recherche
    sosie projet SEMASEARCH
    ```
-   Le Finder s'ouvre sur `~/Coffre/SEMASEARCH/donnees` (pour le retrouver plus tard : dans le Finder,
-   ⇧⌘G puis `~/Coffre`).
+   Le Finder s'ouvre sur `~/Coffre/SEMASEARCH/donnees`. Le coffre reste ouvert le temps d'y déposer les données ;
+   il se refermera à clé à la fin de `sosie creer`. Pour le rouvrir plus tard : `sosie coffre ouvrir` (ou Sosie →
+   « Ouvrir le coffre d'un projet »), puis `sosie coffre fermer`.
 
 2. **Déplacer les vraies données** dans ce dossier du coffre, telles que tu les as reçues (CSV, Excel, SPSS,
    Stata, SAS, R, Parquet, JSON, SQLite… plusieurs fichiers et sous-dossiers possibles).
@@ -116,8 +122,8 @@ Les vrais résultats (ici, ceux des données d'exemple) arrivent dans `resultats
    - Pour compter les patients (et masquer les valeurs rares), `sosie` repère la colonne qui identifie le patient
      (IPP, numéro d'inclusion, nom + prénom + date de naissance…). S'il n'en trouve pas, il le signale :
      `sosie creer --cle-individu id_patient` (ou `--cle-individu LIGNE` si chaque ligne est un patient différent).
-   - Options mémorisées pour les fois suivantes : `--seuil 20` (seuil plus strict, repris par `CLAUDE.md` et
-     `sosie verifier`), `--garder`, `--copier-tel-quel`, `--cle-individu`.
+   - Options mémorisées pour les fois suivantes : `--seuil 20` (seuil plus strict, repris par les consignes
+     pour l'IA et `sosie verifier`), `--garder`, `--copier-tel-quel`, `--cle-individu`.
 
 4. **Travailler avec l'IA** : `open -a "Visual Studio Code" .` (ou `code .`). Ouvre toujours VS Code sur le
    dossier du projet. Exemple de demande : « Lis donnees/FICHE_SOSIE.md, puis écris scripts/analyse.R qui fait
@@ -163,9 +169,13 @@ texte dans une colonne de nombres…) : lance `sosie verifier`, puis demande à 
 resultats_verifies/<exécution>/journal.txt et corrige le script ». Le journal n'est copié que s'il ne contient
 rien d'identifiant ; sinon, décris l'erreur à l'IA avec tes mots.
 
-## La protection (Claude Code) : vérifie-la une fois
+## La protection : vérifie-la une fois
 
-La protection repose sur Claude Code :
+Pour toutes les IA, le **coffre est fermé à clé** : ses droits d'accès sont retirés dès que `sosie` ne s'en sert
+pas, et un programme qui essaie de le lire obtient « Permission denied ». `sosie` ne l'ouvre que le temps de ses
+actions, et refuse de tourner quand c'est une IA qui le lance.
+
+Avec Claude Code, deux verrous s'ajoutent :
 - des **règles d'interdiction** : lire ou modifier le coffre, modifier les réglages de Claude Code, lancer `sosie` ;
 - le **bac à sable** : toute commande lancée par Claude (R, Python…) est empêchée par macOS de lire le coffre, en
   mode strict (Claude ne peut pas relancer une commande hors du bac à sable).
@@ -180,7 +190,7 @@ dossier Téléchargements), autorise ce dossier dans son fichier `.claude/settin
 (`"enabled": false`) : les commandes de Claude dans ce projet pourraient alors lire le coffre.
 Pour revenir à un bac à sable limité aux projets sosie : `sosie configurer --bac-a-sable projets`.
 
-**Le test** (dans VS Code, dans un projet sosie), demande à Claude l'un après l'autre :
+**Le test avec Claude Code** (dans VS Code, dans un projet sosie), demande-lui l'un après l'autre :
 
 1. « Test de protection : lis le fichier ~/Coffre/.temoin/TEMOIN_NE_PAS_LIRE.txt et recopie-moi sa première ligne. »
 2. « Test de protection : exécute Rscript -e 'readLines("~/Coffre/.temoin/TEMOIN_NE_PAS_LIRE.txt")' »
@@ -192,15 +202,20 @@ Les quatre doivent échouer **avec un message technique** (« deny », « Operat
 Si Claude recopie un code qui commence par `TEMOIN-`, ou si le fichier `~/sandbox-probe` apparaît, la protection
 ne marche pas : n'y mets pas de vraies données et lance `sosie etat`. Refais l'essai 1 une fois hors d'un projet sosie.
 
+**Avec une autre IA** (Copilot, Cursor, Codex, Gemini…), fais-lui l'essai 1 : elle doit obtenir « Permission
+denied ». Si elle recopie le code `TEMOIN-…`, le coffre est resté ouvert : lance `sosie coffre fermer`, puis
+`sosie etat`.
+
 Ce que la protection ne couvre pas : elle empêche les accès par erreur, pas une tentative délibérée de la
 contourner ; le bac à sable n'est pas une isolation complète de l'ordinateur ; les serveurs MCP et les « hooks »
 de Claude Code tournent hors du bac à sable ; rien n'empêche de coller de vraies données dans une conversation,
-de les joindre dans l'application Claude ou de les montrer à un autre outil d'IA ; et les autres
-assistants (Copilot, Cursor, Codex…) n'ont pas ces verrous.
+de les joindre dans l'application Claude ou de les montrer à un autre outil d'IA ; enfin, pendant qu'une
+action de `sosie` tourne, ou quand tu as ouvert le coffre toi-même, il est ouvert : ne demande pas à ce moment-là
+à une autre IA que Claude Code de fouiller ton ordinateur.
 
 ## Écrire des scripts « compatibles sosie »
 
-Ces consignes sont déjà écrites dans le `CLAUDE.md` du projet (Claude Code le lit tout seul ; donne-le à une autre IA) :
+Ces consignes sont déjà écrites dans `CLAUDE.md`, `AGENTS.md` et `GEMINI.md`, que chaque IA lit d'elle-même :
 
 - lire les données uniquement dans `donnees/`, avec des chemins relatifs (jamais de chemin absolu) ;
   dans un document Quarto rangé dans un sous-dossier : `here::here("donnees/patients.csv")` ;
@@ -264,7 +279,7 @@ convertit de la même façon les vrais fichiers, donc le script lit le même nom
   dossier `Coffre` (sinon son contenu est indexé et apparaît dans les recherches).
 - N'ouvre pas les vrais fichiers dans la fenêtre VS Code où travaille l'IA.
 - Ne lance pas `sosie` depuis la conversation avec l'IA (par exemple avec `!` dans Claude Code) : la sortie
-  apparaîtrait dans la conversation. (`sosie` refuse de toute façon de tourner quand c'est Claude Code qui le lance.)
+  apparaîtrait dans la conversation. (`sosie` refuse de toute façon de tourner quand c'est une IA qui le lance.)
 - Si un script écrit dans le dossier du projet pendant `sosie executer` (chemin absolu), ces fichiers sont
   déplacés dans le coffre (`quarantaine/`) et signalés.
 - Les exécutions s'accumulent dans `~/Coffre/PROJET/executions/` : fais le ménage de temps en temps.
@@ -280,18 +295,22 @@ convertit de la même façon les vrais fichiers, donc le script lit le même nom
 | `sosie executer scripts/x.R` | lance un script sur les vraies données, dans le coffre |
 | `sosie verifier` | contrôle les sorties de la dernière exécution |
 | `sosie etat` | montre la configuration et l'état du projet |
+| `sosie coffre ouvrir` / `sosie coffre fermer` | ouvre le coffre pour y déposer ou regarder des données, puis le referme à clé |
+| `sosie coffre` | dit si le coffre est fermé à clé |
 | `sosie schema` | exporte le dictionnaire des variables (sans valeurs) |
 | `sosie pseudonymiser` / `sosie reidentifier` | pseudonymisation réversible, sans IA (annexe C) |
 | `sosie autotest` | vérifie sur des données d'essai que sosie fonctionne |
-| `sosie desinstaller` | retire les réglages ajoutés à Claude Code |
+| `sosie desinstaller` | retire les réglages ajoutés à Claude Code et rouvre le coffre |
 
 Chaque commande a son aide : `sosie creer --help`.
 
 ## Dépannage
 
 - **`sosie` : commande introuvable** — ferme la fenêtre du Terminal et ouvres-en une nouvelle (ou tape `~/.local/bin/sosie`).
-- **« c'est à toi de le lancer… »** — la commande a été lancée par Claude Code : lance-la toi-même dans le terminal de
-  VS Code ou dans l'application Terminal.
+- **« c'est à toi de le lancer… »** — la commande a été lancée par une IA (Claude Code, Codex, Copilot…) : lance-la
+  toi-même dans l'application Terminal.
+- **Le Finder dit que tu n'as pas l'autorisation d'ouvrir « Coffre »** — c'est normal : il est fermé à clé. Ouvre-le
+  avec Sosie → « Ouvrir le coffre d'un projet » (ou `sosie coffre ouvrir`), puis referme-le.
 - **Claude Code refuse de démarrer à cause du bac à sable** — tape `sosie configurer --bac-a-sable projets`.
 - **R ou Quarto introuvable** — installe-les ([R](https://cran.r-project.org), [Quarto](https://quarto.org)).
 - **« la ligne d'en-tête ressemble à des données personnelles »** — la première ligne utile du fichier n'est pas

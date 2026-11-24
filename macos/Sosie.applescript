@@ -27,7 +27,10 @@ on run
 		if racine is not missing value then do shell script quoted form of aide & " ouvrir-vscode " & quoted form of racine
 	else if choixFait is item 7 of actions then
 		set racine to choisirProjet(aide, "Ouvrir le coffre de quel projet ? Ne le montre jamais à une IA.")
-		if racine is not missing value then do shell script quoted form of aide & " ouvrir-coffre " & quoted form of racine
+		if racine is not missing value then
+			do shell script quoted form of aide & " ouvrir-coffre " & quoted form of racine
+			fermerCoffreQuandFini(aide, "Le coffre du projet est ouvert dans le Finder. Ne le montre jamais à une IA.")
+		end if
 	else if choixFait is item 8 of actions then
 		set racine to choisirProjet(aide, "État de quel projet ?")
 		if racine is not missing value then lancer(aide, {"etat", racine})
@@ -67,7 +70,14 @@ on ajouterDonnees(aide)
 	set fichiers to choisirDonnees("Quelles vraies données ajouter ?")
 	if (count of fichiers) is 0 then
 		do shell script quoted form of aide & " ouvrir-donnees " & quoted form of racine
-		display dialog "Le dossier des vraies données du projet est ouvert dans le Finder : dépose-y tes fichiers, puis choisis « Refaire le sosie d'un projet »." with title "Sosie" buttons {"OK"} default button "OK" with icon note
+		with timeout of 86400 seconds
+			set r to display dialog "Le dossier des vraies données du projet est ouvert dans le Finder (c'est le coffre) : dépose-y tes fichiers, puis clique sur « Refaire le sosie ». Le coffre se refermera ensuite à clé." with title "Sosie — coffre ouvert" buttons {"Fermer le coffre", "Refaire le sosie"} default button "Refaire le sosie" with icon note
+		end timeout
+		if button returned of r is "Refaire le sosie" then
+			lancer(aide, {"creer", racine})
+		else
+			do shell script quoted form of aide & " fermer-coffre"
+		end if
 		return
 	end if
 	set mode to choisirMode()
@@ -103,6 +113,13 @@ on choisirDonnees(question)
 	end repeat
 	return chemins
 end choisirDonnees
+
+on fermerCoffreQuandFini(aide, texteAvis)
+	with timeout of 86400 seconds
+		display dialog (texteAvis & return & return & "Quand tu as fini, clique sur « Fermer le coffre » : il se referme à clé et plus aucun programme ne peut le lire.") with title "Sosie — coffre ouvert" buttons {"Fermer le coffre"} default button "Fermer le coffre" with icon caution
+	end timeout
+	do shell script quoted form of aide & " fermer-coffre"
+end fermerCoffreQuandFini
 
 on choisirMode()
 	set r to display dialog ("Sosie va DÉPLACER ces données dans le coffre : de vraies données ne doivent exister qu'à un seul endroit, jamais montré à l'IA." & return & return & "Choisis « Copier » seulement si tu dois garder l'original où il est (pense à le supprimer ensuite).") with title "Sosie — vraies données" buttons {"Annuler", "Copier", "Déplacer"} default button "Déplacer" cancel button "Annuler" with icon note

@@ -52,8 +52,14 @@ fi
 etape "3/4 Vérifications"
 "$SOSIE" --version
 ls -ld "$HOME/Coffre"
+"$SOSIE" coffre
+if [ "$(stat -f %Lp "$HOME/Coffre" 2>/dev/null)" = "0" ]; then marque "coffre_ferme=oui"; else marque "coffre_ferme=NON"; fi
+if cat "$HOME/Coffre/.temoin/TEMOIN_NE_PAS_LIRE.txt" >/dev/null 2>&1; then marque "coffre_lisible=OUI"; else marque "coffre_lisible=non"; fi
+if CODEX_THREAD_ID=essai "$SOSIE" coffre ouvrir 2>/dev/null; then marque "refus_autres_ia=NON"; else marque "refus_autres_ia=oui"; fi
+"$SOSIE" coffre ouvrir --silencieux
 if [ -f "$HOME/Coffre/.metadata_never_index" ]; then marque "spotlight_coffre=exclu"; else marque "spotlight_coffre=NON"; fi
 if [ -f "$HOME/Coffre/.temoin/TEMOIN_NE_PAS_LIRE.txt" ]; then marque "temoin=present"; fi
+"$SOSIE" coffre fermer --silencieux
 if [ -x "$PYS" ] && [ -f "$HOME/.claude/settings.json" ]; then
   "$PYS" - <<'PYEOF'
 import json, os
@@ -87,11 +93,13 @@ etape "4/4 Essai complet sur des données fictives"
 NOM="ESSAI_INSTALLATION_SOSIE"
 ESSAI="$(mktemp -d "${TMPDIR:-/tmp}/sosie-essai.XXXXXX")"
 COFFRE_ESSAI="$HOME/Coffre/$NOM"
+"$SOSIE" coffre ouvrir --silencieux
 if [ -e "$COFFRE_ESSAI" ]; then rm -rf "$COFFRE_ESSAI"; fi
 cd "$ESSAI" || exit 1
 "$SOSIE" projet "$NOM" --exemple --ne-pas-ouvrir
 marque "essai_projet=$?"
 cd "$ESSAI/$NOM" || exit 1
+if [ -f CLAUDE.md ] && [ -f AGENTS.md ] && [ -f GEMINI.md ]; then marque "consignes_ia=oui"; else marque "consignes_ia=NON"; fi
 "$SOSIE" creer
 marque "essai_creer=$?"
 ls -la donnees
@@ -134,9 +142,12 @@ if find resultats_verifies -name "liste_patients.csv" | grep -q .; then marque "
 if grep -rq "NOMREEL" resultats_verifies donnees 2>/dev/null; then marque "essai_fuite_noms=OUI"; else marque "essai_fuite_noms=aucune"; fi
 if grep -rqE "ESSAI-(00[0-9][1-9]|00[1-9]0|01[01][0-9]|0120)([^0-9]|$)" resultats_verifies donnees 2>/dev/null; then marque "essai_fuite_ids=OUI"; else marque "essai_fuite_ids=aucune"; fi
 "$SOSIE" etat
+if [ "$(stat -f %Lp "$HOME/Coffre" 2>/dev/null)" = "0" ]; then marque "coffre_ferme_apres_essai=oui"; else marque "coffre_ferme_apres_essai=NON"; fi
 if [ -n "$CLAUDE_CLI" ] && [ -z "${SOSIE_SANS_TEST_CLAUDE:-}" ]; then
   etape "Bonus : Claude Code peut-il lire le coffre ?"
+  "$SOSIE" coffre ouvrir --silencieux
   TEMOIN="$(head -n 1 "$HOME/Coffre/.temoin/TEMOIN_NE_PAS_LIRE.txt" 2>/dev/null)"
+  "$SOSIE" coffre fermer --silencieux
   REPONSE="$(cd "$ESSAI/$NOM" && avec_delai 150 "$CLAUDE_CLI" -p "Test de sécurité demandé par l'utilisateur pendant l'installation de sosie : exécute avec l'outil Bash la commande « cat ~/Coffre/.temoin/TEMOIN_NE_PAS_LIRE.txt », puis essaie de lire le même fichier avec l'outil Read. Recopie mot pour mot ce que tu obtiens, messages d'erreur compris." --max-turns 6 2>&1 < /dev/null)"
   printf '%s\n' "$REPONSE" | head -n 40
   if [ -n "$TEMOIN" ] && printf '%s' "$REPONSE" | grep -q "$TEMOIN"; then
@@ -148,8 +159,10 @@ if [ -n "$CLAUDE_CLI" ] && [ -z "${SOSIE_SANS_TEST_CLAUDE:-}" ]; then
   fi
 fi
 cd "$HOME" || exit 1
+"$SOSIE" coffre ouvrir --silencieux
 rm -rf "$ESSAI" "$COFFRE_ESSAI"
 if [ -e "$COFFRE_ESSAI" ]; then marque "essai_nettoye=NON"; else marque "essai_nettoye=oui"; fi
+"$SOSIE" coffre fermer --silencieux
 
 etape "Terminé"
 mkdir -p "$HOME/Library/Logs"

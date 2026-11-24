@@ -10,6 +10,7 @@ if [ ! -x "$SOSIE" ]; then
   SOSIE="$(command -v sosie 2>/dev/null || true)"
 fi
 CONFIG_APP="${XDG_CONFIG_HOME:-$HOME/.config}/sosie/application.txt"
+COFFRE_A_FERMER=0
 
 titre() { printf '\n\033[1m%s\033[0m\n\n' "$*"; }
 bien() { printf '\033[32m✓\033[0m %s\n' "$*"; }
@@ -17,6 +18,9 @@ alerte() { printf '\033[33m⚠\033[0m  %s\n' "$*"; }
 erreur() { printf '\033[31m✗\033[0m %s\n' "$*"; }
 
 finir() {
+  if [ "$COFFRE_A_FERMER" = 1 ]; then
+    "$SOSIE" coffre fermer --silencieux
+  fi
   echo
   printf 'Appuie sur Entrée pour fermer cette fenêtre. '
   read -r _
@@ -57,16 +61,14 @@ coffre_projet() {
 }
 
 lister() {
-  local c marque racine
-  c="$(coffre)"
-  [ -d "$c" ] || return 0
-  for marque in "$c"/*/.racine_projet; do
-    [ -f "$marque" ] || continue
-    racine="$(head -n 1 "$marque")"
-    if [ -n "$racine" ] && [ -f "$racine/sosie.toml" ]; then
-      printf '%s\t%s\n' "$(basename "$racine")" "$racine"
-    fi
-  done
+  if [ -n "$SOSIE" ] && [ -x "$SOSIE" ] && [ -d "$(coffre)" ]; then
+    "$SOSIE" coffre projets 2>/dev/null || true
+  fi
+}
+
+ouvrir_coffre() {
+  exiger_sosie
+  "$SOSIE" coffre ouvrir --silencieux
 }
 
 lire_reglage() {
@@ -140,6 +142,8 @@ importer() {
   local mode="$1" dest="$2" archives echecs=0 src
   shift 2
   archives="$(dirname "$dest")/archives/$(date +%Y-%m-%d_%Hh%M%S)"
+  "$SOSIE" coffre ouvrir --silencieux || return 1
+  COFFRE_A_FERMER=1
   mkdir -p "$dest" || return 1
   for src in "$@"; do
     transferer "$mode" "$src" "$dest" "$archives" || echecs=$((echecs + 1))
@@ -180,10 +184,11 @@ action_nouveau() {
   racine="$parent/$nom"
   dest="$(coffre_projet "$racine")/donnees"
   if [ "$#" -eq 0 ]; then
+    "$SOSIE" coffre ouvrir --silencieux || finir 1
     open "$dest"
     titre "Dernière étape"
     echo "Dépose tes vraies données dans la fenêtre du Finder qui vient de s'ouvrir (c'est le coffre),"
-    echo "puis ouvre Sosie et choisis « Refaire le sosie d'un projet »."
+    echo "puis ouvre Sosie et choisis « Refaire le sosie d'un projet » : le coffre se refermera alors à clé."
     finir 0
   fi
   titre "Rangement des vraies données dans le coffre"
@@ -301,8 +306,9 @@ case "$action" in
   memoriser-dossier) memoriser_dossier "$1" ;;
   nettoyer-nom) nettoyer_nom "$1" ;;
   ouvrir-vscode) ouvrir_vscode "$1" > /dev/null ;;
-  ouvrir-coffre) open "$(coffre_projet "$1")" ;;
-  ouvrir-donnees) mkdir -p "$(coffre_projet "$1")/donnees" && open "$(coffre_projet "$1")/donnees" ;;
+  ouvrir-coffre) ouvrir_coffre && open "$(coffre_projet "$1")" ;;
+  ouvrir-donnees) ouvrir_coffre && mkdir -p "$(coffre_projet "$1")/donnees" && open "$(coffre_projet "$1")/donnees" ;;
+  fermer-coffre) { [ -n "$SOSIE" ] && [ -x "$SOSIE" ] && "$SOSIE" coffre fermer --silencieux; } || true ;;
   nouveau) action_nouveau "$@" ;;
   ajouter) action_ajouter "$@" ;;
   creer) action_creer "$1" ;;

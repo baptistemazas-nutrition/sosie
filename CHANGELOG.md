@@ -1,5 +1,12 @@
 # Historique des versions
 
+## 1.3.0 — novembre 2026
+
+- **Coffre fermé à clé pour toutes les IA** : ses droits d'accès sont retirés dès que sosie ne s'en sert pas ; sosie ne l'ouvre que le temps de ses actions, puis le referme. Aucune IA (Claude, ChatGPT, Copilot, Cursor, Codex, Gemini…) ni aucun autre programme ne peut le lire par erreur. Nouvelles commandes `sosie coffre ouvrir`, `sosie coffre fermer` et `sosie coffre` (état) ; bouton « Fermer le coffre » dans l'application.
+- **sosie refuse de tourner quand une IA le lance**, quelle qu'elle soit : Claude Code, Codex, Copilot, Cursor, Gemini, OpenCode, Amp, Aider…
+- **Consignes lues d'office par chaque IA** : `AGENTS.md` (Copilot, Cursor, Codex…) et `GEMINI.md` en plus de `CLAUDE.md`, avec le même contenu ; celles des projets existants sont mises à jour au prochain `sosie creer`.
+- Tests du verrou, de la détection des IA et des consignes, sous Linux et sur Mac.
+
 ## 1.2.1 — novembre 2026
 
 - **Pour toutes les IA, pas seulement Claude** : textes de l'outil, de l'application, des modes d'emploi et du site reformulés (« l'IA » plutôt que « Claude ») ; nouvelle partie « Avec quelle IA ? » (assistants de code comme Claude Code, Copilot, Cursor ou Codex, IA de discussion comme ChatGPT, Mistral ou Gemini) ; le verrou automatique du coffre, propre à Claude Code, est présenté comme tel.

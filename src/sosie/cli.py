@@ -15,11 +15,12 @@ from pathlib import Path
 
 from . import __version__
 from .config import (
-    DOSSIER_DONNEES, DOSSIER_RESULTATS, FICHE, FICHIER_RACINE, MANIFESTE, MODELE_CLAUDE_MD, MODELE_GITIGNORE,
-    SEUIL_DEFAUT, ErreurSosie, chemin_coffre, cle_nom, creer_temoin, dans_claude, ecrire_config_globale,
-    ecrire_toml_projet, est_dans, exiger_projet, fusionner_reglages, lire_config_globale, lire_reglages,
-    plateforme_mac, proteger_dossier, refuser_si_claude, reglages_projet, reglages_utilisateur,
-    reglages_utilisateur_claude, regles_refus, trouver_projet, verifier_reglages,
+    DOSSIER_DONNEES, DOSSIER_RESULTATS, FICHE, FICHIER_RACINE, MANIFESTE, MODELE_CONSIGNES, MODELE_GITIGNORE,
+    SEUIL_DEFAUT, ErreurSosie, chemin_coffre, cle_nom, coffre_ferme, coffre_ouvert, creer_temoin, dans_une_ia,
+    ecrire_config_globale, ecrire_toml_projet, est_dans, exiger_projet, fermer_coffre, fusionner_reglages,
+    lire_config_globale, lire_reglages, ouvertures_actives, ouvrir_coffre, plateforme_mac, proteger_dossier,
+    refuser_si_ia, reglages_projet, reglages_utilisateur, reglages_utilisateur_claude, regles_refus, trouver_projet,
+    verifier_reglages,
 )
 
 TRADUCTIONS = {
@@ -83,9 +84,10 @@ def info(texte):
 
 AIDE = f"""sosie {__version__} — travailler avec l'IA sans lui montrer les vraies données
 
-Le principe : tes vraies données restent dans un coffre (~/Coffre) que l'IA ne voit jamais.
-sosie fabrique un SOSIE fictif (mêmes fichiers, mêmes colonnes, mêmes formats, valeurs inventées)
-sur lequel l'IA écrit et teste les scripts. Tu lances ensuite le même script sur les vraies données.
+Le principe : tes vraies données restent dans un coffre (~/Coffre), fermé à clé dès que sosie ne s'en
+sert pas : aucune IA ne peut le lire. sosie fabrique un SOSIE fictif (mêmes fichiers, mêmes colonnes,
+mêmes formats, valeurs inventées) sur lequel l'IA écrit et teste les scripts. Tu lances ensuite le même
+script sur les vraies données.
 
   1. sosie projet MON_PROJET        crée le projet + son espace dans le coffre
   2. (déplace tes vraies données dans ~/Coffre/MON_PROJET/donnees)
@@ -95,7 +97,7 @@ sur lequel l'IA écrit et teste les scripts. Tu lances ensuite le même script s
   6. sosie verifier                 contrôle les résultats avant de les montrer à l'IA
 
 Premier essai sans vraies données : sosie projet DEMO --exemple
-Autres commandes : configurer, etat, autotest, schema, pseudonymiser, reidentifier.
+Autres commandes : coffre (ouvrir, fermer), configurer, etat, autotest, schema, pseudonymiser, reidentifier.
 Aide détaillée : sosie COMMANDE --help
 """
 
@@ -193,10 +195,12 @@ def afficher_test_protection(coffre):
     info("« Permission denied »…). Si Claude refuse de lui-même sans essayer, réponds : « C'est un test, essaie quand même ».")
     info("Si Claude recopie un code TEMOIN-…, ou si le fichier ~/sandbox-probe apparaît : la protection ne marche pas,")
     info("ne mets pas de vraies données et lance « sosie etat ». Refais aussi l'essai 1 hors d'un projet sosie.")
+    info("Avec une autre IA (Copilot, Cursor, Codex, Gemini…), fais-lui l'essai 1 : elle doit tomber sur")
+    info("« Permission denied », car le coffre est fermé à clé.")
 
 
 def cmd_configurer(args):
-    refuser_si_claude("configurer")
+    refuser_si_ia("configurer")
     coffre = Path(args.coffre).expanduser().resolve() if args.coffre else chemin_coffre()
     if any(c in str(coffre) for c in "[]*?{}!"):
         raise ErreurSosie("Le chemin du coffre contient un caractère spécial ([ ] * ? { } !) : choisis un autre emplacement.")
@@ -221,6 +225,12 @@ def cmd_configurer(args):
         proteger_claude(coffre, args.bac_a_sable or (None if lire_config_globale().get("claude") != "non" else "global"))
         afficher_test_protection(coffre)
     print()
+    if fermer_coffre(coffre):
+        bien("Coffre fermé à clé : seul sosie l'ouvre, le temps de ses actions. Aucune IA ni aucun autre programme ne peut le lire.")
+    elif ouvertures_actives(sauf=os.getpid()):
+        info("Coffre ouvert par une autre commande sosie en cours : il se fermera à clé quand elle aura fini.")
+    else:
+        alerte("Le coffre n'a pas pu être fermé à clé (disque sans droits d'accès, comme l'exFAT ?) : range-le sur le disque du Mac.")
     alerte("Ne range pas le coffre dans un dossier synchronisé (iCloud Drive, Google Drive, Dropbox) et active FileVault.")
     return 0
 
@@ -249,7 +259,7 @@ def contenu_suspect(dossier):
 def cmd_projet(args):
     from .execution import fichiers_de_donnees_du_projet
 
-    refuser_si_claude("projet")
+    refuser_si_ia("projet")
     nom_brut = unicodedata.normalize("NFC", " ".join(args.nom).strip())
     if not nom_brut:
         raise ErreurSosie("Indique un nom de projet, par exemple : sosie projet SEMASEARCH")
@@ -309,7 +319,7 @@ def cmd_projet(args):
     for d in (racine / DOSSIER_DONNEES, racine / "scripts", racine / DOSSIER_RESULTATS):
         d.mkdir(parents=True, exist_ok=True)
     (racine / ".here").touch(exist_ok=True)
-    ecrire_claude_md(racine, nom, seuil)
+    ecrire_consignes(racine, nom, seuil)
     gitignore = racine / ".gitignore"
     if not gitignore.exists():
         gitignore.write_text(MODELE_GITIGNORE, encoding="utf-8")
@@ -321,7 +331,7 @@ def cmd_projet(args):
     titre(f"Projet « {nom} » prêt")
     bien(f"Dossier de travail (à ouvrir dans VS Code) : {racine}")
     bien(f"Coffre du projet (vraies données, jamais montrées à l'IA) : {coffre_projet}")
-    bien("Consignes pour l'IA dans CLAUDE.md ; bac à sable de Claude Code activé dans .claude/settings.json")
+    bien("Consignes pour l'IA dans CLAUDE.md, AGENTS.md et GEMINI.md ; bac à sable de Claude Code dans .claude/settings.json")
     if seuil != SEUIL_DEFAUT:
         bien(f"Seuil des petits effectifs du projet : {seuil}")
     for r in repares:
@@ -341,11 +351,15 @@ def cmd_projet(args):
             fabriquer_essai(donnees, np.random.default_rng())
             exemple = True
             bien("Données d'EXEMPLE fictives déposées dans le coffre (patients.csv, visites.xlsx, doses.parquet)")
+    etat_coffre = getattr(args, "etat_coffre", None)
+    if etat_coffre is not None and not exemple:
+        etat_coffre["laisser_ouvert"] = True
     titre("Étapes suivantes")
     etape = 1
     if not exemple:
         info(f"{etape}. DÉPLACE (ne copie pas) tes vraies données dans : {coffre_projet / DOSSIER_DONNEES}")
         info("   puis supprime les autres copies (Téléchargements, pièces jointes…).")
+        info("   Le coffre reste ouvert pour ça ; il se refermera à clé à la fin de « sosie creer ».")
         etape += 1
     info(f"{etape}. cd \"{racine}\"")
     info(f"{etape + 1}. sosie creer")
@@ -355,7 +369,8 @@ def cmd_projet(args):
     return 0
 
 
-RE_SEUIL_CLAUDE = re.compile(r"masquer les effectifs inférieurs à \d+ \(ex\. afficher « <\d+ »\)")
+RE_SEUIL_CONSIGNES = re.compile(r"masquer les effectifs inférieurs à \d+ \(ex\. afficher « <\d+ »\)")
+FICHIERS_CONSIGNES = (("CLAUDE.md", "Claude"), ("AGENTS.md", "l'IA"), ("GEMINI.md", "l'IA"))
 
 
 def lire_texte_souple(chemin):
@@ -368,7 +383,7 @@ def lire_texte_souple(chemin):
     return brut.decode("utf-8", errors="replace")
 
 
-EMPREINTES_CONSIGNES = {17: "0e0cc26705ffab873b71", 22: "47cca2a95b31cf1c17fa"}
+EMPREINTES_CONSIGNES = ((17, "0e0cc26705ffab873b71"), (22, "47cca2a95b31cf1c17fa"), (24, "4731fcc5d78cfe257c4f"))
 
 
 def empreinte_consignes(lignes):
@@ -376,38 +391,46 @@ def empreinte_consignes(lignes):
     return hashlib.sha256(corps.encode("utf-8")).hexdigest()[:20]
 
 
-def remplacer_consignes_anciennes(texte, nom, section):
+def remplacer_consignes_anciennes(texte, titre, section):
     lignes = texte.split("\n")
-    titre = f"# Consignes pour Claude — projet {nom}"
     for i, ligne in enumerate(lignes):
         if ligne.rstrip() != titre:
             continue
-        for n, empreinte in EMPREINTES_CONSIGNES.items():
+        for n, empreinte in EMPREINTES_CONSIGNES:
             bloc = lignes[i:i + n]
             if len(bloc) == n and empreinte_consignes(bloc[1:]) == empreinte:
                 return "\n".join(lignes[:i] + section.rstrip("\n").split("\n") + lignes[i + n:])
     return None
 
 
-def ecrire_claude_md(racine, nom, seuil):
-    claude_md = racine / "CLAUDE.md"
-    section = MODELE_CLAUDE_MD.format(nom=nom, utilisateur="l'utilisateur", seuil=seuil)
-    if not claude_md.exists():
-        claude_md.write_text(section, encoding="utf-8")
+def ecrire_fichier_consignes(chemin, nom, seuil, destinataire):
+    section = MODELE_CONSIGNES.format(destinataire=destinataire, nom=nom, utilisateur="l'utilisateur", seuil=seuil)
+    if not chemin.exists():
+        chemin.write_text(section, encoding="utf-8")
         return "cree"
-    texte = lire_texte_souple(claude_md)
+    texte = lire_texte_souple(chemin)
     if "sosie fictif" not in texte:
-        claude_md.write_text(texte.rstrip() + "\n\n" + section, encoding="utf-8")
+        chemin.write_text(texte.rstrip() + "\n\n" + section, encoding="utf-8")
         return "ajoute"
-    remplace = remplacer_consignes_anciennes(texte, nom, section)
+    remplace = remplacer_consignes_anciennes(texte, f"# Consignes pour {destinataire} — projet {nom}", section)
     if remplace is not None:
-        claude_md.write_text(remplace, encoding="utf-8")
+        chemin.write_text(remplace, encoding="utf-8")
         return "mis_a_jour"
-    nouveau = RE_SEUIL_CLAUDE.sub(f"masquer les effectifs inférieurs à {seuil} (ex. afficher « <{seuil} »)", texte)
+    nouveau = RE_SEUIL_CONSIGNES.sub(f"masquer les effectifs inférieurs à {seuil} (ex. afficher « <{seuil} »)", texte)
     if nouveau != texte:
-        claude_md.write_text(nouveau, encoding="utf-8")
+        chemin.write_text(nouveau, encoding="utf-8")
         return "seuil"
     return None
+
+
+def ecrire_consignes(racine, nom, seuil):
+    statuts = {}
+    for fichier, destinataire in FICHIERS_CONSIGNES:
+        try:
+            statuts[fichier] = ecrire_fichier_consignes(racine / fichier, nom, seuil, destinataire)
+        except OSError:
+            statuts[fichier] = None
+    return statuts
 
 
 def reparer_reglages_locaux(racine):
@@ -561,7 +584,7 @@ def creer_sosie(args):
             raise ErreurSosie(f"Dictionnaire illisible : {e}")
         sosies = tables_ecriture
     else:
-        refuser_si_claude("creer")
+        refuser_si_ia("creer")
         if args.source:
             source = Path(args.source).expanduser().resolve()
         elif config:
@@ -717,15 +740,14 @@ def creer_sosie(args):
         if changements:
             mettre_a_jour_toml_projet(racine, config, **changements)
             if "seuil" in changements:
-                info(f"Seuil du projet enregistré : {seuil} (CLAUDE.md et sosie verifier l'utiliseront).")
-        try:
-            statut_md = ecrire_claude_md(racine, config["nom"], seuil)
-        except OSError:
-            statut_md = None
-        if statut_md == "mis_a_jour":
-            bien("Consignes pour l'IA (CLAUDE.md) mises à jour pour cette version de sosie.")
-        elif statut_md in ("cree", "ajoute"):
-            bien("Consignes pour l'IA ajoutées à CLAUDE.md.")
+                info(f"Seuil du projet enregistré : {seuil} (consignes pour l'IA et sosie verifier l'utiliseront).")
+        statuts = ecrire_consignes(racine, config["nom"], seuil)
+        mis_a_jour = [f for f, s in statuts.items() if s == "mis_a_jour"]
+        ajoutes = [f for f, s in statuts.items() if s in ("cree", "ajoute")]
+        if mis_a_jour:
+            bien(f"Consignes pour l'IA mises à jour pour cette version de sosie : {', '.join(mis_a_jour)}.")
+        if ajoutes:
+            bien(f"Consignes pour l'IA ajoutées : {', '.join(ajoutes)}.")
         options = [f"--garder {' '.join(garder)}" if garder else "", f"--copier-tel-quel {' '.join(copier_tel_quel)}" if copier_tel_quel else "",
                    f"--cle-individu {' '.join(cles_individu)}" if cles_individu else ""]
         options = [o for o in options if o]
@@ -797,7 +819,7 @@ def diagnostiquer_echec(journal, infos):
 def cmd_executer(args):
     from .execution import JOURNAL, executer
 
-    refuser_si_claude("executer")
+    refuser_si_ia("executer")
     racine, config = exiger_projet()
     controler_avant_execution(racine, config)
     dossier, code, infos = executer(racine, config, list(args.cible or []), afficher=args.afficher)
@@ -909,7 +931,7 @@ def cmd_verifier(args):
     from .execution import MANIFESTE_EXECUTION, derniere_execution
     from .verification import BLOQUE, LIBELLES, OK, conseils, verifier
 
-    refuser_si_claude("verifier")
+    refuser_si_ia("verifier")
     racine, config = exiger_projet()
     seuil = seuil_du_projet(args, config)
     coffre_projet = Path(config["coffre"])
@@ -961,7 +983,7 @@ def cmd_verifier(args):
 def cmd_pseudonymiser(args):
     from .pseudonymisation import pseudonymiser
 
-    refuser_si_claude("pseudonymiser")
+    refuser_si_ia("pseudonymiser")
     racine, config = trouver_projet()
     coffre = chemin_coffre()
     coffre_projet = Path(config["coffre"]) if config else coffre / "_pseudonymisation"
@@ -1002,7 +1024,7 @@ def cmd_pseudonymiser(args):
 def cmd_reidentifier(args):
     from .pseudonymisation import reidentifier
 
-    refuser_si_claude("reidentifier")
+    refuser_si_ia("reidentifier")
     racine, config = trouver_projet()
     coffre = chemin_coffre()
     coffre_projet = Path(config["coffre"]) if config else coffre / "_pseudonymisation"
@@ -1030,7 +1052,7 @@ def cmd_reidentifier(args):
 
 
 def cmd_schema(args):
-    refuser_si_claude("schema")
+    refuser_si_ia("schema")
     return dans_temporaire_du_coffre(exporter_schema, args)
 
 
@@ -1106,8 +1128,19 @@ def cmd_etat(args):
 
     coffre = chemin_coffre()
     titre("Coffre")
+    etat_coffre = getattr(args, "etat_coffre", None)
     if coffre.exists():
         bien(f"{coffre}")
+        etait_ferme = etat_coffre["etait_ferme"] if etat_coffre is not None else coffre_ferme(coffre)
+        if etait_ferme:
+            bien("Fermé à clé quand sosie ne s'en sert pas : aucune IA ni aucun autre programme ne peut le lire")
+        elif ouvertures_actives(sauf=os.getpid()):
+            info("Ouvert par une commande sosie en cours : il se fermera à clé quand elle aura fini")
+        else:
+            alerte("Coffre OUVERT : n'importe quel programme peut le lire. Il se fermera à clé à la fin de la prochaine "
+                   "action de sosie, ou tout de suite avec « sosie coffre fermer ».")
+            if etat_coffre is not None:
+                etat_coffre["laisser_ouvert"] = True
     else:
         alerte(f"{coffre} n'existe pas encore : lance « sosie configurer »")
     utilisateur = lire_reglages(reglages_utilisateur_claude())
@@ -1128,7 +1161,7 @@ def cmd_etat(args):
         alerte("Bac à sable global absent des réglages de Claude Code : lance « sosie configurer »")
     racine, config = trouver_projet()
     projet, local = {}, {}
-    if racine is not None and not dans_claude():
+    if racine is not None and not dans_une_ia():
         titre(f"Projet « {config['nom']} »")
         info(f"Dossier de travail : {racine}")
         info(f"Seuil des petits effectifs : {config.get('seuil', SEUIL_DEFAUT)}")
@@ -1191,7 +1224,7 @@ def coffre_dans(bac, coffre):
 def cmd_desinstaller(args):
     from .config import defaire_reglages
 
-    refuser_si_claude("desinstaller")
+    refuser_si_ia("desinstaller")
     chemin = reglages_utilisateur_claude()
     changements = defaire_reglages(chemin)
     titre("Désinstallation de sosie")
@@ -1206,8 +1239,70 @@ def cmd_desinstaller(args):
         info(f"Ton fichier d'origine, avant sosie, reste disponible : {origine}")
     info("Les projets gardent leurs propres réglages (.claude/settings.json) : supprime-les si tu n'en veux plus.")
     coffre = chemin_coffre()
-    alerte(f"Le coffre n'est PAS supprimé (tes vraies données) : {coffre}")
+    try:
+        ouvrir_coffre(coffre)
+    except OSError:
+        pass
+    etat_coffre = getattr(args, "etat_coffre", None)
+    if etat_coffre is not None:
+        etat_coffre["laisser_ouvert"] = True
+    alerte(f"Le coffre n'est PAS supprimé (tes vraies données) ; il reste ouvert, sans verrou : {coffre}")
     info("Pour retirer l'outil lui-même : uv tool uninstall sosie")
+    return 0
+
+
+def lister_projets(coffre):
+    projets = []
+    for marque in sorted(coffre.glob(f"*/{FICHIER_RACINE}")):
+        try:
+            racine = marque.read_text(encoding="utf-8").strip().splitlines()[0]
+        except (OSError, UnicodeDecodeError, IndexError):
+            continue
+        if racine and (Path(racine) / "sosie.toml").exists():
+            projets.append((Path(racine).name, racine))
+    return projets
+
+
+def cmd_coffre(args):
+    coffre = chemin_coffre()
+    action = args.action or "etat"
+    if action == "fermer":
+        if not coffre.exists():
+            raise ErreurSosie(f"{coffre} n'existe pas : lance « sosie configurer ».")
+        if fermer_coffre(coffre):
+            if not args.silencieux:
+                bien(f"Coffre fermé à clé : {coffre}")
+            return 0
+        if ouvertures_actives(sauf=os.getpid()):
+            if not args.silencieux:
+                info("Une autre commande sosie utilise le coffre : il se fermera à clé quand elle aura fini.")
+            return 0
+        raise ErreurSosie("Le coffre n'a pas pu être fermé à clé (disque sans droits d'accès, comme l'exFAT ?).")
+    if action == "etat":
+        if not coffre.exists():
+            alerte(f"{coffre} n'existe pas encore : lance « sosie configurer »")
+        elif coffre_ferme(coffre):
+            bien(f"Coffre fermé à clé : {coffre}")
+        elif ouvertures_actives(sauf=os.getpid()):
+            info(f"Coffre ouvert par une commande sosie en cours : {coffre}")
+        else:
+            alerte(f"Coffre OUVERT : {coffre}. Pour le fermer à clé : sosie coffre fermer")
+        return 0
+    refuser_si_ia(f"coffre {action}")
+    if not coffre.exists():
+        raise ErreurSosie(f"{coffre} n'existe pas encore : lance « sosie configurer ».")
+    if action == "projets":
+        with coffre_ouvert() as etat:
+            etat["laisser_ouvert"] = not etat["etait_ferme"]
+            for nom, racine in lister_projets(coffre):
+                print(f"{nom}\t{racine}")
+        return 0
+    with coffre_ouvert() as etat:
+        etat["laisser_ouvert"] = True
+    if not args.silencieux:
+        bien(f"Coffre ouvert : {coffre}")
+        info("Il se refermera à clé à la fin de la prochaine action de sosie, ou tout de suite avec « sosie coffre fermer ».")
+        info("Tant qu'il est ouvert, ne demande pas à une IA de fouiller ton ordinateur.")
     return 0
 
 
@@ -1295,6 +1390,11 @@ def construire_analyseur():
     c = sous.add_parser("etat", aliases=["état"], help="affiche la configuration et l'état du projet")
     c.set_defaults(fonction=cmd_etat)
 
+    c = sous.add_parser("coffre", help="ouvre ou ferme à clé le coffre des vraies données (ouvrir, fermer, etat)")
+    c.add_argument("action", nargs="?", choices=["ouvrir", "fermer", "etat", "projets"], help="ouvrir, fermer ou etat (par défaut)")
+    c.add_argument("--silencieux", action="store_true", help="n'affiche rien si tout va bien")
+    c.set_defaults(fonction=cmd_coffre)
+
     c = sous.add_parser("autotest", help="vérifie sur des données d'essai que sosie fonctionne sur cet ordinateur")
     c.set_defaults(fonction=cmd_autotest)
 
@@ -1327,17 +1427,18 @@ def lieu_erreur(e):
     return "?"
 
 
-def main(argv=None):
-    warnings.filterwarnings("ignore")
-    try:
-        analyseur = construire_analyseur()
-        args = analyseur.parse_args(argv)
-    except KeyboardInterrupt:
-        print("\nInterrompu.", file=sys.stderr)
-        return 130
-    if not getattr(args, "fonction", None):
-        print(AIDE)
-        return 0
+def besoin_du_coffre(args):
+    if args.fonction is cmd_creer:
+        return not args.depuis_schema
+    return args.fonction in (cmd_configurer, cmd_projet, cmd_executer, cmd_verifier, cmd_pseudonymiser,
+                             cmd_reidentifier, cmd_schema, cmd_etat, cmd_desinstaller)
+
+
+def arreter_proprement(signal_recu, cadre):
+    raise SystemExit(128 + signal_recu)
+
+
+def lancer_commande(args):
     try:
         return args.fonction(args) or 0
     except ErreurSosie as e:
@@ -1359,6 +1460,31 @@ def main(argv=None):
             print(f"  Détails techniques (dans le coffre, ils peuvent contenir des valeurs réelles) : {chemin}", file=sys.stderr)
         print("  Tu peux copier les deux lignes ci-dessus à l'IA pour obtenir de l'aide (pas le fichier de détails).", file=sys.stderr)
         return 1
+
+
+def main(argv=None):
+    import signal
+
+    warnings.filterwarnings("ignore")
+    try:
+        analyseur = construire_analyseur()
+        args = analyseur.parse_args(argv)
+    except KeyboardInterrupt:
+        print("\nInterrompu.", file=sys.stderr)
+        return 130
+    if not getattr(args, "fonction", None):
+        print(AIDE)
+        return 0
+    if not besoin_du_coffre(args) or dans_une_ia():
+        return lancer_commande(args)
+    for nom in ("SIGTERM", "SIGHUP"):
+        try:
+            signal.signal(getattr(signal, nom), arreter_proprement)
+        except (AttributeError, ValueError, OSError):
+            pass
+    with coffre_ouvert() as etat:
+        args.etat_coffre = etat
+        return lancer_commande(args)
 
 
 if __name__ == "__main__":
