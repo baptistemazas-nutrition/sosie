@@ -679,7 +679,7 @@ def executer(racine, config, elements, afficher=False):
             print(f"⚠ {len(exclus)} fichier(s) de données hors de donnees/ non copié(s) : {', '.join(exclus[:5])}"
                   + (" …" if len(exclus) > 5 else ""))
             print("  S'ils sont produits par un de tes scripts, lance les scripts à la suite : sosie executer prepa.R analyse.R")
-            print("  S'ils viennent des vraies données, Claude peut les lire : déplace-les dans le coffre.")
+            print("  S'ils viennent des vraies données, l'IA peut les lire : déplace-les dans le coffre.")
         if non_copies:
             print(f"  Non copiés (ni code ni references/) : {', '.join(non_copies[:6])}" + (" …" if len(non_copies) > 6 else ""))
             print("  Un fichier statique utile au script (logo, image, modèle) se range dans references/.")

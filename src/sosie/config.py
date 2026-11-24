@@ -191,7 +191,7 @@ def verifier_coffre_projet(racine, config):
             f"remets « coffre = \"{coffre / Path(racine).name}\" » ou relance « sosie projet . »."
         )
     if est_dans(coffre_projet, racine) or est_dans(racine, coffre_projet):
-        raise ErreurSosie("sosie.toml désigne un coffre situé dans le projet : refusé (Claude pourrait lire les vraies données).")
+        raise ErreurSosie("sosie.toml désigne un coffre situé dans le projet : refusé (l'IA pourrait lire les vraies données).")
     for partie in [coffre_projet, *coffre_projet.parents]:
         if partie == coffre or partie == partie.parent:
             break
@@ -579,7 +579,7 @@ def creer_temoin(coffre):
     if not fichier.exists():
         fichier.write_text(
             f"TEMOIN-{secrets.token_hex(6).upper()}\n"
-            "Si Claude arrive à te recopier le code ci-dessus, la protection du coffre ne fonctionne pas.\n",
+            "Si une IA arrive à te recopier le code ci-dessus, elle peut lire le coffre : la protection ne fonctionne pas.\n",
             encoding="utf-8",
         )
     return fichier

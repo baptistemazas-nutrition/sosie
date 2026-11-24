@@ -162,9 +162,9 @@ creer_projet() {
   return "${PIPESTATUS[0]}"
 }
 
-conseils_claude() {
+conseils_ia() {
   titre "C'est prêt"
-  echo "VS Code s'ouvre sur le projet. Ouvre Claude Code et demande-lui par exemple :"
+  echo "VS Code s'ouvre sur le projet. Ouvre ton assistant d'IA (Claude Code, Copilot…) et demande-lui par exemple :"
   echo "  « Lis donnees/FICHE_SOSIE.md et propose-moi un plan d'analyse. »"
   echo
   echo "Quand un script tourne sur le sosie : ouvre Sosie > « Lancer un script sur les vraies données »."
@@ -191,7 +191,7 @@ action_nouveau() {
   titre "Fabrication du sosie"
   fabriquer "$racine" || finir 1
   ouvrir_vscode "$racine"
-  conseils_claude
+  conseils_ia
   finir 0
 }
 
@@ -204,7 +204,7 @@ action_ajouter() {
   importer "$mode" "$dest" "$@" || finir 1
   titre "Fabrication du sosie"
   fabriquer "$racine" || finir 1
-  bien "Sosie à jour : Claude voit la nouvelle structure dans donnees/."
+  bien "Sosie à jour : l'IA voit la nouvelle structure dans donnees/."
   finir 0
 }
 
@@ -226,7 +226,7 @@ action_executer() {
   titre "Exécution de $cible sur les VRAIES données"
   "$SOSIE" executer "$cible"
   code=$?
-  titre "Vérification avant de montrer quoi que ce soit à Claude"
+  titre "Vérification avant de montrer quoi que ce soit à l'IA"
   "$SOSIE" verifier
   finir "$code"
 }
@@ -255,7 +255,7 @@ action_exemple() {
   titre "Fabrication du sosie"
   fabriquer "$parent/$nom" || finir 1
   ouvrir_vscode "$parent/$nom"
-  conseils_claude
+  conseils_ia
   finir 0
 }
 

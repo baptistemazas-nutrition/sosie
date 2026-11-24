@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sosie — travailler avec Claude sans lui montrer les vraies données</title>
-<meta name="description" content="Sosie range les vraies données de santé dans un coffre, fabrique un jumeau fictif pour que Claude écrive les scripts, puis vérifie les résultats avant de les lui montrer.">
+<title>Sosie — travailler avec l'IA sans lui montrer les vraies données</title>
+<meta name="description" content="Sosie range les vraies données de santé dans un coffre, fabrique un jumeau fictif pour que l'IA écrive les scripts, puis vérifie les résultats avant de les lui montrer.">
 <link rel="icon" type="image/png" href="icone.png">
 <style>
 :root {
@@ -88,7 +88,9 @@ header.heros .contenu { position: relative; z-index: 1; max-width: 1120px; margi
 .etiquette-version { display: inline-flex; gap: 8px; align-items: center; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 5px 12px; font-size: 13.5px; margin-bottom: 22px; }
 header.heros h1 { font-size: clamp(38px, 6vw, 62px); line-height: 1.04; letter-spacing: -.035em; margin: 0 0 18px; }
 header.heros h1 em { font-style: normal; color: #8ee3d6; }
-header.heros p.chapo { font-size: 20px; opacity: .92; max-width: 600px; margin: 0 0 30px; }
+header.heros p.chapo { font-size: 20px; opacity: .92; max-width: 600px; margin: 0 0 18px; }
+header.heros p.compatibles { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; margin: 0 0 30px; opacity: .92; }
+header.heros p.compatibles span { background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 3px 11px; font-weight: 600; }
 .boutons { display: flex; gap: 12px; flex-wrap: wrap; }
 .bouton {
   display: inline-flex; align-items: center; gap: 8px;
@@ -165,7 +167,7 @@ td.vide { color: transparent; }
 }
 .voile span { font-size: 34px; }
 .voile small { font-weight: 500; color: var(--doux); }
-.claude-voit .table-boite.vraie .voile { opacity: 1; }
+.ia-voit .table-boite.vraie .voile { opacity: 1; }
 .legende { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 16px; font-size: 13.5px; color: var(--doux); }
 .legende i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; }
 .note { font-size: 13.5px; color: var(--doux); margin: 14px 0 0; }
@@ -262,9 +264,10 @@ footer a { color: var(--doux); }
 <header class="heros">
   <div class="contenu">
     <div>
-      <div class="etiquette-version">🔒 Outil local pour Mac · version 1.2.0</div>
-      <h1>Travaille avec Claude sur tes bases, <em>sans jamais lui montrer les vraies.</em></h1>
-      <p class="chapo">Sosie range les vraies données dans un coffre, fabrique un jumeau fictif de ta base pour que Claude écrive les scripts, puis vérifie tout ce qui ressort avant de le lui montrer.</p>
+      <div class="etiquette-version">🔒 Outil local pour Mac · version 1.2.1</div>
+      <h1>Travaille avec l'IA sur tes bases, <em>sans jamais lui montrer les vraies.</em></h1>
+      <p class="chapo">Sosie range les vraies données dans un coffre, fabrique un jumeau fictif de ta base pour que l'IA écrive les scripts, puis vérifie tout ce qui ressort avant de le lui montrer.</p>
+      <p class="compatibles">Avec l'IA de ton choix <span>Claude</span><span>ChatGPT</span><span>Copilot</span><span>Mistral</span><span>Gemini</span></p>
       <div class="boutons">
         <a class="bouton plein" href="#installer">Installer sur mon Mac</a>
         <a class="bouton clair" href="#demo">Voir la démonstration</a>
@@ -279,12 +282,12 @@ footer a { color: var(--doux); }
 <section id="principe">
   <p class="surtitre">Le principe</p>
   <h2>Un cycle en quatre temps</h2>
-  <p class="intro">Clique sur chaque étape pour voir qui fait quoi. Les vraies données ne quittent jamais ton Mac et Claude ne les lit jamais.</p>
+  <p class="intro">Clique sur chaque étape pour voir qui fait quoi. Les vraies données ne quittent jamais ton Mac et l'IA ne les voit jamais.</p>
   <div class="cycle" role="group" aria-label="Étapes du cycle">
-    <button class="etape carte" data-etape="0" aria-pressed="true"><span class="numero">1</span><span class="emoji">🔒</span><b>Le coffre</b><span>Les vraies données y sont rangées, hors de portée de Claude.</span></button>
+    <button class="etape carte" data-etape="0" aria-pressed="true"><span class="numero">1</span><span class="emoji">🔒</span><b>Le coffre</b><span>Les vraies données y sont rangées, jamais montrées à l'IA.</span></button>
     <button class="etape carte" data-etape="1" aria-pressed="false"><span class="numero">2</span><span class="emoji">🧬</span><b>Le sosie</b><span>Un jumeau fictif : même structure, aucune vraie personne.</span></button>
-    <button class="etape carte" data-etape="2" aria-pressed="false"><span class="numero">3</span><span class="emoji">▶️</span><b>L'exécution</b><span>Le script de Claude tourne sur les vraies données.</span></button>
-    <button class="etape carte" data-etape="3" aria-pressed="false"><span class="numero">4</span><span class="emoji">✅</span><b>La vérification</b><span>Seuls les résultats sans risque reviennent à Claude.</span></button>
+    <button class="etape carte" data-etape="2" aria-pressed="false"><span class="numero">3</span><span class="emoji">▶️</span><b>L'exécution</b><span>Le script écrit par l'IA tourne sur les vraies données.</span></button>
+    <button class="etape carte" data-etape="3" aria-pressed="false"><span class="numero">4</span><span class="emoji">✅</span><b>La vérification</b><span>Seuls les résultats sans risque reviennent à l'IA.</span></button>
   </div>
   <div class="detail-etape carte" id="detail-etape" aria-live="polite"></div>
 </section>
@@ -292,19 +295,19 @@ footer a { color: var(--doux); }
 <section id="demo">
   <p class="surtitre">Démonstration</p>
   <h2>Fabrique un sosie</h2>
-  <p class="intro">Voici une petite base entièrement inventée. Appuie sur le bouton : chaque colonne est traitée selon sa nature. Puis active « Ce que voit Claude ».</p>
+  <p class="intro">Voici une petite base entièrement inventée. Appuie sur le bouton : chaque colonne est traitée selon sa nature. Puis active « Ce que voit l'IA ».</p>
   <div class="demo carte" id="zone-demo">
     <div class="demo-barre">
       <button class="bouton action" id="fabriquer">🧬 Fabriquer le sosie</button>
       <button class="bouton discret" id="refaire" hidden>↻ Refaire (nouveau tirage)</button>
       <span class="espace"></span>
-      <label class="bascule"><input type="checkbox" id="vue-claude"> Ce que voit Claude</label>
+      <label class="bascule"><input type="checkbox" id="vue-ia"> Ce que voit l'IA</label>
     </div>
     <div class="tables">
       <div class="table-boite vraie">
         <div class="titre-table">🔒 Vraies données · dans le coffre</div>
         <div class="defile"><table class="donnees" id="table-vraie"></table></div>
-        <div class="voile"><span>🔒</span>Invisible pour Claude<small>le coffre lui est interdit</small></div>
+        <div class="voile"><span>🔒</span>Invisible pour l'IA<small>le coffre ne lui est jamais montré</small></div>
       </div>
       <div class="fleche-demo"><span>↓ sosie creer</span></div>
       <div class="table-boite jumelle">
@@ -327,7 +330,7 @@ footer a { color: var(--doux); }
 <section id="verification">
   <p class="surtitre">La vérification</p>
   <h2>Que dirait Sosie de ces résultats ?</h2>
-  <p class="intro">Ton script a tourné sur les vraies données et a produit quatre fichiers. Clique sur chacun pour voir le verdict de la vérification, avant que Claude ne voie quoi que ce soit.</p>
+  <p class="intro">Ton script a tourné sur les vraies données et a produit quatre fichiers. Clique sur chacun pour voir le verdict de la vérification, avant que l'IA ne voie quoi que ce soit.</p>
   <div class="verifs">
     <button class="fichier carte">
       <span class="nom-fichier">imc_par_groupe.csv</span>
@@ -344,7 +347,7 @@ A,nausées,48
 B,pancréatite,3
 C,nausées,61</pre>
       <span class="indice">Cliquer pour vérifier</span>
-      <div class="verdict v-revoir"><b>⚠️ À revoir</b>Une case vaut 3 : un petit effectif peut désigner quelqu'un. Demande à Claude de regrouper ou d'afficher « &lt;11 », ou force après relecture.</div>
+      <div class="verdict v-revoir"><b>⚠️ À revoir</b>Une case vaut 3 : un petit effectif peut désigner quelqu'un. Demande à l'IA de regrouper ou d'afficher « &lt;11 », ou force après relecture.</div>
     </button>
     <button class="fichier carte">
       <span class="nom-fichier">liste_patients.csv</span>
@@ -352,7 +355,7 @@ C,nausées,61</pre>
 SEMA-0042,DUPUIS A.,112.4
 SEMA-0107,KONATE M.,98.1</pre>
       <span class="indice">Cliquer pour vérifier</span>
-      <div class="verdict v-bloque"><b>⛔ Bloqué</b>De vrais identifiants et de vrais noms : le fichier reste dans le coffre. Ne le montre jamais à Claude, corrige le script.</div>
+      <div class="verdict v-bloque"><b>⛔ Bloqué</b>De vrais identifiants et de vrais noms : le fichier reste dans le coffre. Ne le montre jamais à l'IA, corrige le script.</div>
     </button>
     <button class="fichier carte">
       <span class="nom-fichier">courbe_survie.png</span>
@@ -400,11 +403,11 @@ SEMA-0107,KONATE M.,98.1</pre>
 <section id="quotidien">
   <p class="surtitre">Au quotidien</p>
   <h2>L'application, ou une commande</h2>
-  <p class="intro">Chaque action du menu de Sosie existe aussi en commande, à taper dans le terminal de VS Code, dans le dossier du projet. Claude ne lance jamais ces commandes : c'est toi qui touches aux vraies données.</p>
+  <p class="intro">Chaque action du menu de Sosie existe aussi en commande, à taper dans le terminal de VS Code, dans le dossier du projet. L'IA ne lance jamais ces commandes : c'est toi qui touches aux vraies données.</p>
   <div class="quotidien">
     <div class="carte"><b>🧬 Refaire le sosie</b><p>Après un changement des vraies données ou une mise à jour de Sosie.</p><div class="commande"><code>sosie creer</code><button class="copier">Copier</button></div></div>
-    <div class="carte"><b>▶️ Lancer un script sur les vraies données</b><p>Le script écrit par Claude, une fois qu'il tourne sur le sosie.</p><div class="commande"><code>sosie executer scripts/analyse.R</code><button class="copier">Copier</button></div></div>
-    <div class="carte"><b>✅ Vérifier les résultats</b><p>Copie dans <code>resultats_verifies/</code> ce qui peut être montré à Claude.</p><div class="commande"><code>sosie verifier</code><button class="copier">Copier</button></div></div>
+    <div class="carte"><b>▶️ Lancer un script sur les vraies données</b><p>Le script écrit par l'IA, une fois qu'il tourne sur le sosie.</p><div class="commande"><code>sosie executer scripts/analyse.R</code><button class="copier">Copier</button></div></div>
+    <div class="carte"><b>✅ Vérifier les résultats</b><p>Copie dans <code>resultats_verifies/</code> ce qui peut être montré à l'IA.</p><div class="commande"><code>sosie verifier</code><button class="copier">Copier</button></div></div>
     <div class="carte"><b>🩺 État et protection</b><p>Coffre, sosie, dernières exécutions, protection de Claude Code.</p><div class="commande"><code>sosie etat</code><button class="copier">Copier</button></div></div>
   </div>
 </section>
@@ -414,9 +417,9 @@ SEMA-0107,KONATE M.,98.1</pre>
   <h2>Six réflexes</h2>
   <div class="regles">
     <div class="carte"><span>🔒</span><b>Le coffre, et seulement lui</b><p>Les vraies données ne vivent que dans <code>~/Coffre</code> : Sosie les y déplace pour toi.</p></div>
-    <div class="carte"><span>🚫</span><b>Aucun autre outil d'IA</b><p>N'ajoute jamais le dossier Coffre à l'application Claude, à Codex, à Cursor ou à ChatGPT.</p></div>
+    <div class="carte"><span>🚫</span><b>Le coffre, à aucune IA</b><p>N'ajoute jamais le dossier Coffre à une IA : ni l'application Claude, ni ChatGPT, Copilot, Cursor ou Codex.</p></div>
     <div class="carte"><span>✂️</span><b>Pas de copier-coller</b><p>Ne colle jamais une vraie valeur ou un résultat non vérifié dans une conversation.</p></div>
-    <div class="carte"><span>📂</span><b>Le projet, pas tout le disque</b><p>Ouvre VS Code sur le dossier du projet : ce sont ses consignes qui guident Claude.</p></div>
+    <div class="carte"><span>📂</span><b>Le projet, pas tout le disque</b><p>Ouvre ton assistant d'IA sur le dossier du projet, jamais sur tout le disque : ses consignes (<code>CLAUDE.md</code>) le guident.</p></div>
     <div class="carte"><span>🔢</span><b>Pas de petits effectifs</b><p>Moins de 11 patients dans une case : on regroupe ou on affiche « &lt;11 ».</p></div>
     <div class="carte"><span>🧪</span><b>Le sosie ne soigne personne</b><p>Ses chiffres n'ont aucun sens clinique : seuls comptent ceux des vraies données vérifiées.</p></div>
   </div>
@@ -425,8 +428,9 @@ SEMA-0107,KONATE M.,98.1</pre>
 <section id="faq">
   <p class="surtitre">Questions</p>
   <h2>Ce qu'on se demande souvent</h2>
-  <details><summary>Claude peut-il quand même lire mes vraies données ?</summary><p>Non, Claude Code n'y a pas accès. À l'installation, Sosie lui interdit le coffre (règles de refus et bac à sable) et y dépose un fichier témoin qui permet de vérifier la protection. Les seules choses que Claude voit sont le sosie (dans <code>donnees/</code>) et les résultats vérifiés (dans <code>resultats_verifies/</code>). La protection vaut pour Claude Code : n'ouvre jamais le coffre avec un autre outil d'IA.</p></details>
-  <details><summary>Et si mon script plante sur les vraies données alors qu'il marchait sur le sosie ?</summary><p>C'est justement prévu : le sosie reproduit les pièges des vraies données (formats, virgules, valeurs manquantes, codes spéciaux) pour que ça arrive rarement. Si ça plante, la vérification transmet le journal d'erreur à Claude quand il ne contient rien d'identifiant : demande-lui de lire <code>resultats_verifies/</code> et de corriger.</p></details>
+  <details><summary>Ça marche avec quelle IA ?</summary><p>Avec celle que tu préfères. Un assistant de code ouvert sur le dossier du projet (Claude Code, GitHub Copilot, Cursor, Codex…) lit la fiche du sosie, écrit le script et le teste sur le sosie. Une IA de discussion (ChatGPT, Le Chat de Mistral, Gemini, l'application Claude…) l'écrit à partir de la fiche <code>FICHE_SOSIE.md</code>, que tu lui donnes. Dans les deux cas, elle ne voit que des données inventées et des résultats vérifiés. Les consignes de travail sont dans <code>CLAUDE.md</code> : Claude Code les lit tout seul, demande aux autres de le lire d'abord.</p></details>
+  <details><summary>L'IA peut-elle quand même lire mes vraies données ?</summary><p>Elle ne reçoit que le sosie (dans <code>donnees/</code>) et les résultats vérifiés (dans <code>resultats_verifies/</code>). Avec Claude Code, c'est en plus verrouillé : à l'installation, Sosie lui interdit le coffre (règles de refus et bac à sable) et y dépose un fichier témoin qui permet de vérifier la protection. Une autre IA qui lance des commandes sur ton Mac (Copilot, Cursor, Codex…) n'a pas ce verrou : ne lui donne jamais le coffre, refuse toute commande qui le vise, et fais-lui le test du fichier témoin.</p></details>
+  <details><summary>Et si mon script plante sur les vraies données alors qu'il marchait sur le sosie ?</summary><p>C'est justement prévu : le sosie reproduit les pièges des vraies données (formats, virgules, valeurs manquantes, codes spéciaux) pour que ça arrive rarement. Si ça plante, la vérification transmet le journal d'erreur à l'IA quand il ne contient rien d'identifiant : demande-lui de lire <code>resultats_verifies/</code> et de corriger.</p></details>
   <details><summary>Quels formats sont pris en charge ?</summary><p>CSV et TXT (séparateurs, encodages et virgules décimales conservés), Excel (feuilles, en-têtes décalés), SAS (sas7bdat, xpt), SPSS (étiquettes et manquants), Stata, Parquet, Feather, R (rds, RData avec facteurs et dates), SQLite et JSON. Les extractions du SNDS sont gérées (clés de jointure, codes, dates).</p></details>
   <details><summary>Pourquoi Claude Code est-il plus bridé dans mes autres projets ?</summary><p>Par défaut, Sosie active le bac à sable de Claude Code dans tous les projets, pour qu'aucun ne puisse lire le coffre. Si cela te gêne (écriture hors du projet, <code>git push</code>, certains sites), limite-le aux projets Sosie avec <code>sosie configurer --bac-a-sable projets</code>.</p></details>
   <details><summary>Comment mettre à jour Sosie ?</summary><p>Ouvre Sosie et choisis <b>Réparer ou mettre à jour sosie</b> : la dernière version est récupérée et tout est réinstallé. Refais ensuite le sosie de tes projets pour profiter des corrections.</p></details>
@@ -446,23 +450,23 @@ SEMA-0107,KONATE M.,98.1</pre>
 const etapes = [
   {
     titre: "🔒 Le coffre",
-    texte: "Tes vraies données sont rangées dans ~/Coffre/NOM_DU_PROJET. Claude Code a l'interdiction d'y entrer, Spotlight ne l'indexe pas, et un fichier témoin permet de vérifier la protection.",
-    qui: [["Toi", "Tu choisis ta base dans Sosie : elle est déplacée dans le coffre."], ["Sosie", "Protège le coffre et en garde la seule copie."], ["Claude", "N'y a pas accès."]]
+    texte: "Tes vraies données sont rangées dans ~/Coffre/NOM_DU_PROJET. Tu ne le montres jamais à l'IA : Claude Code a même l'interdiction d'y entrer, Spotlight ne l'indexe pas, et un fichier témoin permet de vérifier la protection.",
+    qui: [["Toi", "Tu choisis ta base dans Sosie : elle est déplacée dans le coffre."], ["Sosie", "Protège le coffre et en garde la seule copie."], ["L'IA", "Ne le voit jamais."]]
   },
   {
     titre: "🧬 Le sosie",
-    texte: "Sosie fabrique un jumeau de ta base dans le dossier du projet : mêmes fichiers, colonnes, types, formats et jointures, mais aucune vraie personne. Une fiche décrit chaque variable pour Claude.",
-    qui: [["Sosie", "Lit les vraies données et fabrique le sosie et sa fiche."], ["Claude", "Lit le sosie, écrit et teste ses scripts dessus."], ["Toi", "Discutes l'analyse avec Claude dans VS Code."]]
+    texte: "Sosie fabrique un jumeau de ta base dans le dossier du projet : mêmes fichiers, colonnes, types, formats et jointures, mais aucune vraie personne. Une fiche décrit chaque variable pour l'IA.",
+    qui: [["Sosie", "Lit les vraies données et fabrique le sosie et sa fiche."], ["L'IA", "Lit le sosie, écrit et teste ses scripts dessus."], ["Toi", "Discutes l'analyse avec l'IA de ton choix."]]
   },
   {
     titre: "▶️ L'exécution",
     texte: "Quand le script tourne sur le sosie, tu le lances sur les vraies données. Il s'exécute dans le coffre : ses résultats y restent tant qu'ils n'ont pas été vérifiés.",
-    qui: [["Toi", "Sosie → « Lancer un script sur les vraies données »."], ["Sosie", "Exécute le script sur les vraies données, dans le coffre."], ["Claude", "Attend : il ne voit encore rien."]]
+    qui: [["Toi", "Sosie → « Lancer un script sur les vraies données »."], ["Sosie", "Exécute le script sur les vraies données, dans le coffre."], ["L'IA", "Attend : elle ne voit encore rien."]]
   },
   {
     titre: "✅ La vérification",
     texte: "Chaque fichier produit est contrôlé : identifiants, noms, dates de naissance, petits effectifs, lignes individuelles. Seul ce qui est sans risque est copié dans resultats_verifies/.",
-    qui: [["Sosie", "Classe chaque fichier : ✅ partageable, ⚠️ à revoir, ⛔ bloqué, 👁 à regarder."], ["Toi", "Relis les ⚠️ et les 👁 si besoin."], ["Claude", "Lit resultats_verifies/ et interprète."]]
+    qui: [["Sosie", "Classe chaque fichier : ✅ partageable, ⚠️ à revoir, ⛔ bloqué, 👁 à regarder."], ["Toi", "Relis les ⚠️ et les 👁 si besoin."], ["L'IA", "Lit resultats_verifies/ et interprète."]]
   }
 ];
 const boutonsEtapes = document.querySelectorAll(".etape");
@@ -532,7 +536,7 @@ function fabriquer() {
 }
 document.getElementById("fabriquer").addEventListener("click", () => { graine = 7; fabriquer(); });
 document.getElementById("refaire").addEventListener("click", () => { graine = Math.floor(Math.random() * 2147483646) + 1; fabriquer(); });
-document.getElementById("vue-claude").addEventListener("change", e => document.getElementById("zone-demo").classList.toggle("claude-voit", e.target.checked));
+document.getElementById("vue-ia").addEventListener("change", e => document.getElementById("zone-demo").classList.toggle("ia-voit", e.target.checked));
 
 document.querySelectorAll(".fichier").forEach(f => f.addEventListener("click", () => f.classList.toggle("ouvert")));
 

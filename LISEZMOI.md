@@ -1,25 +1,26 @@
-# sosie — travailler avec Claude sans lui montrer tes vraies données
+# sosie — travailler avec l'IA sans lui montrer tes vraies données
 
 ## Le principe
 
-Tes vraies données restent dans un **coffre** (`~/Coffre`) que Claude Code ne peut ni lire ni modifier.
+Tes vraies données restent dans un **coffre** (`~/Coffre`) que tu ne montres jamais à l'IA (Claude Code n'a
+même pas le droit de le lire ni de le modifier).
 `sosie` fabrique un **sosie** de chaque base : mêmes fichiers, mêmes colonnes, mêmes formats, mêmes clés
-de jointure, mais des valeurs inventées. Claude écrit et teste les scripts sur le sosie. C'est ensuite toi qui
+de jointure, mais des valeurs inventées. L'IA écrit et teste les scripts sur le sosie. C'est ensuite toi qui
 lances le même script sur les vraies données, en une commande.
 
 ```
-~/Coffre/MON_PROJET/donnees/          vraies données — Claude n'y a pas accès
+~/Coffre/MON_PROJET/donnees/          vraies données — jamais montrées à l'IA
         │   sosie creer
         ▼
 MON_PROJET/donnees/                   SOSIE : même structure, faux contenu
-        │   Claude écrit et teste scripts/analyse.R sur le sosie
+        │   l'IA écrit et teste scripts/analyse.R sur le sosie
         ▼
         │   sosie executer scripts/analyse.R     ← c'est TOI qui lances
         ▼
 ~/Coffre/MON_PROJET/executions/…      vrais résultats, restent dans le coffre
         │   sosie verifier
         ▼
-MON_PROJET/resultats_verifies/        résultats agrégés contrôlés : Claude peut t'aider à les rédiger
+MON_PROJET/resultats_verifies/        résultats agrégés contrôlés : l'IA peut t'aider à les rédiger
 ```
 
 Pourquoi ne pas pseudonymiser, envoyer à l'IA, puis dé-pseudonymiser ?
@@ -28,7 +29,25 @@ Pourquoi ne pas pseudonymiser, envoyer à l'IA, puis dé-pseudonymiser ?
   Les confier à une IA en ligne supposerait que les formalités de ton étude couvrent ce destinataire, avec un
   contrat de sous-traitance, un encadrement du transfert hors UE, un hébergement HDS et une analyse d'impact (AIPD).
 - Les données individuelles du SNDS ne quittent jamais un environnement conforme à son référentiel de sécurité.
-- Pour écrire un script, Claude n'a besoin que de la **structure** des données : le sosie suffit, sans aller-retour.
+- Pour écrire un script, l'IA n'a besoin que de la **structure** des données : le sosie suffit, sans aller-retour.
+
+## Avec quelle IA ?
+
+Avec celle que tu préfères : le sosie, sa fiche (`FICHE_SOSIE.md`) et les résultats vérifiés sont des fichiers
+ordinaires, sans aucune vraie donnée.
+
+- Un **assistant de code** ouvert sur le dossier du projet (Claude Code, GitHub Copilot, Cursor, Codex…) lit la
+  fiche, écrit le script et le teste sur le sosie.
+- Une **IA de discussion** (ChatGPT, Le Chat de Mistral, Gemini, l'application Claude…) écrit le script à partir de
+  la fiche, que tu lui donnes ; tu l'enregistres dans le projet et tu le testes sur le sosie.
+
+Les consignes de travail (où lire, où écrire, petits effectifs…) sont dans le `CLAUDE.md` du projet : Claude Code
+les lit tout seul ; demande aux autres de le lire d'abord.
+
+Une différence à connaître : le **verrou automatique** du coffre (règles d'interdiction, bac à sable, refus de
+lancer `sosie`) est réglé pour Claude Code. Une autre IA qui lance des commandes sur ton Mac pourrait techniquement
+ouvrir `~/Coffre` : ne lui donne jamais le coffre, refuse toute commande qui le vise, et fais-lui l'essai 1 de
+« La protection ».
 
 ## Installation (une seule fois)
 
@@ -45,7 +64,7 @@ L'installation télécharge `uv` (gestionnaire Python) puis Python 3.12 et les b
 réglages est faite) et lance `sosie autotest`, qui vérifie sur des données d'essai que tout fonctionne.
 
 Mise à jour : même procédure avec le nouveau `sosie.zip`, puis `sosie creer` dans chaque projet (le sosie est
-refait avec la nouvelle version et les consignes pour Claude de `CLAUDE.md` sont mises à jour).
+refait avec la nouvelle version et les consignes de `CLAUDE.md` sont mises à jour).
 Désinstallation : `sosie desinstaller` (retire les réglages ajoutés à Claude Code ; le coffre n'est pas touché),
 puis `uv tool uninstall sosie`.
 
@@ -59,7 +78,7 @@ sosie creer
 open -a "Visual Studio Code" .
 ```
 
-Dans VS Code, demande à Claude : « Lis donnees/FICHE_SOSIE.md puis écris scripts/analyse.R qui calcule le poids
+Dans VS Code, demande à l'IA (Claude Code, Copilot…) : « Lis donnees/FICHE_SOSIE.md puis écris scripts/analyse.R qui calcule le poids
 moyen par sexe et l'enregistre dans resultats/table1.csv. Teste-le sur le sosie. »
 Puis, dans le terminal de VS Code (menu Terminal › Nouveau terminal) :
 
@@ -83,7 +102,7 @@ Les vrais résultats (ici, ceux des données d'exemple) arrivent dans `resultats
 2. **Déplacer les vraies données** dans ce dossier du coffre, telles que tu les as reçues (CSV, Excel, SPSS,
    Stata, SAS, R, Parquet, JSON, SQLite… plusieurs fichiers et sous-dossiers possibles).
    **Déplace-les, ne les copie pas**, puis supprime les autres copies (Téléchargements, pièces jointes) :
-   un fichier réel laissé dans le dossier du projet serait lisible par Claude.
+   un fichier réel laissé dans le dossier du projet serait lisible par l'IA.
 
 3. **Fabriquer le sosie** :
    ```
@@ -100,9 +119,9 @@ Les vrais résultats (ici, ceux des données d'exemple) arrivent dans `resultats
    - Options mémorisées pour les fois suivantes : `--seuil 20` (seuil plus strict, repris par `CLAUDE.md` et
      `sosie verifier`), `--garder`, `--copier-tel-quel`, `--cle-individu`.
 
-4. **Travailler avec Claude** : `open -a "Visual Studio Code" .` (ou `code .`). Ouvre toujours VS Code sur le
+4. **Travailler avec l'IA** : `open -a "Visual Studio Code" .` (ou `code .`). Ouvre toujours VS Code sur le
    dossier du projet. Exemple de demande : « Lis donnees/FICHE_SOSIE.md, puis écris scripts/analyse.R qui fait
-   le tableau 1 et le modèle … ». Claude teste le script sur le sosie ; les résultats obtenus n'ont **aucun
+   le tableau 1 et le modèle … ». L'IA teste le script sur le sosie ; les résultats obtenus n'ont **aucun
    sens** (c'est voulu), seul compte le fait que le code tourne.
 
 5. **Lancer sur les vraies données** — toi, dans le terminal de VS Code ou l'application Terminal :
@@ -113,21 +132,21 @@ Les vrais résultats (ici, ceux des données d'exemple) arrivent dans `resultats
    ce qu'il produit reste dans le coffre. Fonctionne avec `.R`, `.py`, `.qmd`, `.Rmd`, `.ipynb`, `.sh`, ou une
    commande : `sosie executer -- Rscript -e "..."`. Ce que le script affiche ne s'affiche pas à l'écran : c'est
    dans `journal.txt`, vérifié comme le reste par `sosie verifier` (`--afficher` l'affiche quand même, à ne
-   jamais faire dans un terminal que Claude peut lire).
+   jamais faire dans un terminal que l'IA peut lire).
    - Plusieurs scripts qui s'enchaînent (préparation puis analyse) : `sosie executer scripts/prepa.R scripts/analyse.R`.
      Les fichiers intermédiaires calculés sur le sosie ne sont jamais recopiés dans l'exécution réelle.
    - Un fichier de référence sans donnée personnelle (nomenclature publique…) : range-le dans `references/`,
      il sera copié.
-   - Le script tourne avec tes droits, hors du bac à sable de Claude : parcours-le avant de le lancer (fichiers
+   - Le script tourne avec tes droits, hors de tout bac à sable : parcours-le avant de le lancer (fichiers
      lus et écrits, aucun envoi sur Internet, aucun chemin absolu).
 
-6. **Contrôler avant de montrer à Claude** :
+6. **Contrôler avant de montrer à l'IA** :
    ```
    sosie verifier
    ```
    Chaque fichier produit est classé :
 
-   | | Signification | Copié pour Claude ? |
+   | | Signification | Copié pour l'IA ? |
    |---|---|---|
    | ✅ | rien de suspect | oui, dans `resultats_verifies/` |
    | ⚠️ | effectif < 11, liste de patients, valeur min/max, modalité rare, objet R ou modèle | non (tu peux forcer après avoir regardé) |
@@ -136,15 +155,15 @@ Les vrais résultats (ici, ceux des données d'exemple) arrivent dans `resultats
 
    Une ligne de conseil accompagne chaque fichier gardé. Le détail (quelles cellules, quelles valeurs) reste dans
    le coffre : `VERIFICATION_DETAILLEE.md`. Après avoir regardé un fichier toi-même :
-   `sosie verifier --forcer resultats/figure.png`. `resultats_verifies/…/VERIFICATION.md` dit à Claude
+   `sosie verifier --forcer resultats/figure.png`. `resultats_verifies/…/VERIFICATION.md` dit à l'IA
    quels fichiers sont restés dans le coffre et pourquoi, sans aucune valeur réelle.
 
 **Si le script s'arrête sur une erreur** (les vraies données diffèrent souvent du sosie : modalité inattendue,
-texte dans une colonne de nombres…) : lance `sosie verifier`, puis demande à Claude « Lis
+texte dans une colonne de nombres…) : lance `sosie verifier`, puis demande à l'IA « Lis
 resultats_verifies/<exécution>/journal.txt et corrige le script ». Le journal n'est copié que s'il ne contient
-rien d'identifiant ; sinon, décris l'erreur à Claude avec tes mots.
+rien d'identifiant ; sinon, décris l'erreur à l'IA avec tes mots.
 
-## La protection : vérifie-la une fois
+## La protection (Claude Code) : vérifie-la une fois
 
 La protection repose sur Claude Code :
 - des **règles d'interdiction** : lire ou modifier le coffre, modifier les réglages de Claude Code, lancer `sosie` ;
@@ -176,11 +195,12 @@ ne marche pas : n'y mets pas de vraies données et lance `sosie etat`. Refais l'
 Ce que la protection ne couvre pas : elle empêche les accès par erreur, pas une tentative délibérée de la
 contourner ; le bac à sable n'est pas une isolation complète de l'ordinateur ; les serveurs MCP et les « hooks »
 de Claude Code tournent hors du bac à sable ; rien n'empêche de coller de vraies données dans une conversation,
-de les joindre dans l'application Claude ou de les montrer à un autre outil d'IA.
+de les joindre dans l'application Claude ou de les montrer à un autre outil d'IA ; et les autres
+assistants (Copilot, Cursor, Codex…) n'ont pas ces verrous.
 
 ## Écrire des scripts « compatibles sosie »
 
-Ces consignes sont déjà écrites pour Claude dans le `CLAUDE.md` du projet :
+Ces consignes sont déjà écrites dans le `CLAUDE.md` du projet (Claude Code le lit tout seul ; donne-le à une autre IA) :
 
 - lire les données uniquement dans `donnees/`, avec des chemins relatifs (jamais de chemin absolu) ;
   dans un document Quarto rangé dans un sous-dossier : `here::here("donnees/patients.csv")` ;
@@ -227,10 +247,11 @@ convertit de la même façon les vrais fichiers, donc le script lit le même nom
 ## Questions à poser à ton DPO
 
 - Ai-je le droit de conserver les vraies données de cette étude sur mon Mac (chiffré par FileVault) ?
-- Le sosie, la fiche et les résultats agrégés vérifiés peuvent-ils être transmis à Anthropic (Claude), et sous
-  quel contrat (offre entreprise de l'AP-HP ou de l'INSERM, ou compte personnel) ?
+- Le sosie, la fiche et les résultats agrégés vérifiés peuvent-ils être transmis à l'éditeur de l'IA (Anthropic
+  pour Claude, OpenAI pour ChatGPT, Microsoft pour Copilot, Mistral AI…), et sous quel contrat (offre entreprise
+  de l'AP-HP ou de l'INSERM, ou compte personnel) ?
 - Le seuil de 11 individus convient-il pour cette étude ?
-- Pour le SNDS : aucun fichier ne doit aller vers Claude avant l'export validé par la plateforme.
+- Pour le SNDS : aucun fichier ne doit aller vers une IA avant l'export validé par la plateforme.
 - La traçabilité des exécutions (`~/Coffre/PROJET/executions/`) est-elle suffisante pour le registre de l'étude ?
 
 ## Limites et bonnes pratiques
@@ -241,9 +262,9 @@ convertit de la même façon les vrais fichiers, donc le script lit le même nom
 - Garde le coffre hors des dossiers synchronisés (iCloud Drive, Google Drive, Dropbox) et active FileVault.
 - Exclus le coffre de Spotlight : Réglages Système › Siri et Spotlight › Confidentialité de Spotlight › `+` ›
   dossier `Coffre` (sinon son contenu est indexé et apparaît dans les recherches).
-- N'ouvre pas les vrais fichiers dans la fenêtre VS Code où travaille Claude.
-- Ne lance pas `sosie` avec `!` dans la zone de saisie de Claude : la sortie apparaîtrait dans la conversation.
-  (`sosie` refuse de toute façon de tourner quand c'est Claude qui le lance.)
+- N'ouvre pas les vrais fichiers dans la fenêtre VS Code où travaille l'IA.
+- Ne lance pas `sosie` depuis la conversation avec l'IA (par exemple avec `!` dans Claude Code) : la sortie
+  apparaîtrait dans la conversation. (`sosie` refuse de toute façon de tourner quand c'est Claude Code qui le lance.)
 - Si un script écrit dans le dossier du projet pendant `sosie executer` (chemin absolu), ces fichiers sont
   déplacés dans le coffre (`quarantaine/`) et signalés.
 - Les exécutions s'accumulent dans `~/Coffre/PROJET/executions/` : fais le ménage de temps en temps.
@@ -269,7 +290,7 @@ Chaque commande a son aide : `sosie creer --help`.
 ## Dépannage
 
 - **`sosie` : commande introuvable** — ferme la fenêtre du Terminal et ouvres-en une nouvelle (ou tape `~/.local/bin/sosie`).
-- **« c'est à toi de le lancer… »** — la commande a été lancée par Claude : lance-la toi-même dans le terminal de
+- **« c'est à toi de le lancer… »** — la commande a été lancée par Claude Code : lance-la toi-même dans le terminal de
   VS Code ou dans l'application Terminal.
 - **Claude Code refuse de démarrer à cause du bac à sable** — tape `sosie configurer --bac-a-sable projets`.
 - **R ou Quarto introuvable** — installe-les ([R](https://cran.r-project.org), [Quarto](https://quarto.org)).
@@ -279,9 +300,9 @@ Chaque commande a son aide : `sosie creer --help`.
   dictionnaire permettent d'ajuster.
 - **Excel avec un en-tête sur plusieurs lignes** — `sosie` repère les lignes de titre au-dessus de l'en-tête, pas
   un en-tête sur deux lignes : simplifie l'en-tête avant de fabriquer le sosie.
-- **Claude ne peut pas installer un package R** — le bac à sable autorise l'écriture dans `~/Library/R` et l'accès
+- **Claude Code ne peut pas installer un package R** — le bac à sable autorise l'écriture dans `~/Library/R` et l'accès
   aux dépôts CRAN, Posit, Bioconductor, PyPI et GitHub ; pour une autre source, installe le package toi-même.
-- **Erreur inattendue** — le message indique le fichier de détails (dans le coffre). Copie à Claude les deux lignes
+- **Erreur inattendue** — le message indique le fichier de détails (dans le coffre). Copie à l'IA les deux lignes
   du message, pas le fichier de détails.
 
 ---
@@ -291,7 +312,7 @@ Chaque commande a son aide : `sosie creer --help`.
 Les données individuelles ne sortent jamais de la bulle ; seuls des résultats anonymes (en pratique agrégés)
 en sortent, après validation. La méthode :
 
-1. Mettre au point le script sur ton Mac, avec Claude, sur des données synthétiques :
+1. Mettre au point le script sur ton Mac, avec l'IA, sur des données synthétiques :
    - la base synthétique **ParaBios** du Health Data Hub (juillet 2026, Licence Ouverte 2.0, archive d'environ
      1,5 Go, 8 fichiers Parquet de 2023 : tables DCIR `ER_*` et référentiels `IR_BEN_R`, `IR_IMB_R` ; pas de PMSI,
      pas de cohérence médicale) — volumineuse : travaille sur un échantillon ;

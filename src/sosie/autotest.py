@@ -134,5 +134,5 @@ def lancer():
             print("  · R n'est pas installé : test des fichiers R ignoré (installe R si tu l'utilises)")
     echecs = [m for ok, m in resultats if not ok]
     print()
-    print("Tout fonctionne." if not echecs else f"{len(echecs)} problème(s) : copie ce message à Claude.")
+    print("Tout fonctionne." if not echecs else f"{len(echecs)} problème(s) : copie ce message à l'IA.")
     return 0 if not echecs else 1

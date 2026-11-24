@@ -26,7 +26,7 @@ on run
 		set racine to choisirProjet(aide, "Ouvrir quel projet dans VS Code ?")
 		if racine is not missing value then do shell script quoted form of aide & " ouvrir-vscode " & quoted form of racine
 	else if choixFait is item 7 of actions then
-		set racine to choisirProjet(aide, "Ouvrir le coffre de quel projet ? Ne le montre jamais à Claude ni à un autre outil d'IA.")
+		set racine to choisirProjet(aide, "Ouvrir le coffre de quel projet ? Ne le montre jamais à une IA.")
 		if racine is not missing value then do shell script quoted form of aide & " ouvrir-coffre " & quoted form of racine
 	else if choixFait is item 8 of actions then
 		set racine to choisirProjet(aide, "État de quel projet ?")
@@ -49,7 +49,7 @@ on nouveauProjet(aide)
 		return
 	end if
 	set dossierParent to do shell script quoted form of aide & " dossier-projets"
-	set r to display dialog ("Le dossier de travail du projet sera créé ici :" & return & return & dossierParent & "/" & nom & return & return & "C'est ce dossier que tu ouvriras dans VS Code avec Claude : il ne contiendra que le sosie (données fictives), tes scripts et les résultats vérifiés. Les vraies données iront dans le coffre.") with title "Sosie — nouveau projet" buttons {"Annuler", "Autre emplacement…", "Continuer"} default button "Continuer" cancel button "Annuler"
+	set r to display dialog ("Le dossier de travail du projet sera créé ici :" & return & return & dossierParent & "/" & nom & return & return & "C'est ce dossier que tu ouvriras dans VS Code pour travailler avec l'IA : il ne contiendra que le sosie (données fictives), tes scripts et les résultats vérifiés. Les vraies données iront dans le coffre.") with title "Sosie — nouveau projet" buttons {"Annuler", "Autre emplacement…", "Continuer"} default button "Continuer" cancel button "Annuler"
 	if button returned of r is "Autre emplacement…" then
 		set dossierChoisi to choose folder with prompt "Dans quel dossier créer le projet « " & nom & " » ?"
 		set dossierParent to do shell script "p=" & quoted form of (POSIX path of dossierChoisi) & "; printf '%s' \"${p%/}\""
@@ -89,7 +89,7 @@ on lancerScript(aide)
 end lancerScript
 
 on choisirDonnees(question)
-	set r to display dialog (question & return & return & "Choisis le ou les fichiers (CSV, Excel, SAS, SPSS, Stata, Parquet, R…) ou le dossier qui les contient. Ils iront dans le coffre, que Claude ne peut pas lire.") with title "Sosie — vraies données" buttons {"Plus tard", "Un dossier…", "Des fichiers…"} default button "Des fichiers…" with icon note
+	set r to display dialog (question & return & return & "Choisis le ou les fichiers (CSV, Excel, SAS, SPSS, Stata, Parquet, R…) ou le dossier qui les contient. Ils iront dans le coffre, que tu ne montreras jamais à l'IA.") with title "Sosie — vraies données" buttons {"Plus tard", "Un dossier…", "Des fichiers…"} default button "Des fichiers…" with icon note
 	set b to button returned of r
 	if b is "Plus tard" then return {}
 	if b is "Un dossier…" then
@@ -105,7 +105,7 @@ on choisirDonnees(question)
 end choisirDonnees
 
 on choisirMode()
-	set r to display dialog ("Sosie va DÉPLACER ces données dans le coffre : de vraies données ne doivent exister qu'à un seul endroit, que Claude ne peut pas lire." & return & return & "Choisis « Copier » seulement si tu dois garder l'original où il est (pense à le supprimer ensuite).") with title "Sosie — vraies données" buttons {"Annuler", "Copier", "Déplacer"} default button "Déplacer" cancel button "Annuler" with icon note
+	set r to display dialog ("Sosie va DÉPLACER ces données dans le coffre : de vraies données ne doivent exister qu'à un seul endroit, jamais montré à l'IA." & return & return & "Choisis « Copier » seulement si tu dois garder l'original où il est (pense à le supprimer ensuite).") with title "Sosie — vraies données" buttons {"Annuler", "Copier", "Déplacer"} default button "Déplacer" cancel button "Annuler" with icon note
 	if button returned of r is "Copier" then return "copier"
 	return "deplacer"
 end choisirMode

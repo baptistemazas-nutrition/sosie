@@ -1,5 +1,10 @@
 # Historique des versions
 
+## 1.2.1 — novembre 2026
+
+- **Pour toutes les IA, pas seulement Claude** : textes de l'outil, de l'application, des modes d'emploi et du site reformulés (« l'IA » plutôt que « Claude ») ; nouvelle partie « Avec quelle IA ? » (assistants de code comme Claude Code, Copilot, Cursor ou Codex, IA de discussion comme ChatGPT, Mistral ou Gemini) ; le verrou automatique du coffre, propre à Claude Code, est présenté comme tel.
+- **Site et démonstration interactive** : https://baptistemazas-nutrition.github.io/sosie/
+
 ## 1.2.0 — novembre 2026
 
 Deuxième vague de vérification (7 agents : parcours utilisateur, fuites dans le sosie, contournement du vérificateur, fidélité R/Quarto, fidélité Python/ML, structure et robustesse, revue du code pour Mac).

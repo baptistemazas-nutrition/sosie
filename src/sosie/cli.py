@@ -83,16 +83,16 @@ def info(texte):
 
 AIDE = f"""sosie {__version__} — travailler avec l'IA sans lui montrer les vraies données
 
-Le principe : tes vraies données restent dans un coffre (~/Coffre) que Claude ne peut pas lire.
+Le principe : tes vraies données restent dans un coffre (~/Coffre) que l'IA ne voit jamais.
 sosie fabrique un SOSIE fictif (mêmes fichiers, mêmes colonnes, mêmes formats, valeurs inventées)
-sur lequel Claude écrit et teste les scripts. Tu lances ensuite le même script sur les vraies données.
+sur lequel l'IA écrit et teste les scripts. Tu lances ensuite le même script sur les vraies données.
 
   1. sosie projet MON_PROJET        crée le projet + son espace dans le coffre
   2. (déplace tes vraies données dans ~/Coffre/MON_PROJET/donnees)
   3. cd MON_PROJET && sosie creer   fabrique le sosie dans donnees/
-  4. open -a "Visual Studio Code" .  travaille avec Claude sur le sosie
+  4. open -a "Visual Studio Code" .  travaille avec l'IA sur le sosie
   5. sosie executer scripts/analyse.R    lance le script sur les vraies données (dans le coffre)
-  6. sosie verifier                 contrôle les résultats avant de les montrer à Claude
+  6. sosie verifier                 contrôle les résultats avant de les montrer à l'IA
 
 Premier essai sans vraies données : sosie projet DEMO --exemple
 Autres commandes : configurer, etat, autotest, schema, pseudonymiser, reidentifier.
@@ -286,7 +286,7 @@ def cmd_projet(args):
         if exposes and not args.j_ai_verifie:
             raise ErreurSosie(
                 f"Ce dossier contient des fichiers de données hors de donnees/ ({', '.join(exposes[:5])}"
-                + (" …" if len(exposes) > 5 else "") + "). Claude pourrait les lire. Si ce sont de vraies données, "
+                + (" …" if len(exposes) > 5 else "") + "). L'IA pourrait les lire. Si ce sont de vraies données, "
                 f"DÉPLACE-les (ne les copie pas) dans {coffre_projet / DOSSIER_DONNEES}. Si ce sont des fichiers sans donnée "
                 "personnelle (nomenclatures publiques…), range-les dans references/, ou relance avec --j-ai-verifie."
             )
@@ -320,8 +320,8 @@ def cmd_projet(args):
                        {k: ancien.get(k) for k in ("garder", "copier_tel_quel", "cle_individu")})
     titre(f"Projet « {nom} » prêt")
     bien(f"Dossier de travail (à ouvrir dans VS Code) : {racine}")
-    bien(f"Coffre du projet (vraies données, invisible pour Claude) : {coffre_projet}")
-    bien("Consignes pour Claude dans CLAUDE.md ; bac à sable activé dans .claude/settings.json")
+    bien(f"Coffre du projet (vraies données, jamais montrées à l'IA) : {coffre_projet}")
+    bien("Consignes pour l'IA dans CLAUDE.md ; bac à sable de Claude Code activé dans .claude/settings.json")
     if seuil != SEUIL_DEFAUT:
         bien(f"Seuil des petits effectifs du projet : {seuil}")
     for r in repares:
@@ -349,7 +349,7 @@ def cmd_projet(args):
         etape += 1
     info(f"{etape}. cd \"{racine}\"")
     info(f"{etape + 1}. sosie creer")
-    info(f"{etape + 2}. {commande_vscode()}   (puis travaille avec Claude sur le sosie)")
+    info(f"{etape + 2}. {commande_vscode()}   (puis travaille avec l'IA sur le sosie)")
     if plateforme_mac() and not args.ne_pas_ouvrir and not exemple:
         subprocess.run(["open", str(coffre_projet / DOSSIER_DONNEES)], check=False)
     return 0
@@ -539,7 +539,7 @@ def creer_sosie(args):
         raise ErreurSosie("Indique --destination, ou place-toi dans un projet sosie.")
     coffre = chemin_coffre()
     if est_dans(destination, coffre):
-        raise ErreurSosie("Le sosie doit être écrit hors du coffre (c'est lui que Claude lira).")
+        raise ErreurSosie("Le sosie doit être écrit hors du coffre (c'est lui que l'IA lira).")
     suspects = contenu_suspect(destination)
     if suspects:
         raise ErreurSosie(
@@ -681,7 +681,7 @@ def creer_sosie(args):
     resumer_profil(profil_ok)
     titre("Sosie prêt")
     bien(f"{len(ecrits)} fichier(s) écrit(s) dans {destination}")
-    bien(f"Fiche descriptive pour toi et pour Claude : {destination / FICHE}")
+    bien(f"Fiche descriptive pour toi et pour l'IA : {destination / FICHE}")
     info("Gardés tels quels : noms de fichiers, de feuilles, de colonnes et d'objets R, libellés de variables."
          " Vérifie qu'aucun ne contient un nom de patient.")
     for rel, raison, _ in ignores:
@@ -693,11 +693,11 @@ def creer_sosie(args):
                + ", ".join(controle["masques"][:8]))
         info("Si l'une de ces colonnes contient des noms de personnes, signale-la : sosie creer --cle-individu ou renomme-la.")
     if copies:
-        alerte("Copié(s) tel(s) quel(s) à ta demande, donc lisible(s) par Claude : " + ", ".join(rel for _, rel in copies))
+        alerte("Copié(s) tel(s) quel(s) à ta demande, donc lisible(s) par l'IA : " + ", ".join(rel for _, rel in copies))
     copies_noms = {rel for _, rel in copies}
     for chemin, rel in fichiers:
         if rel not in copies_noms and any(m in cle_nom(Path(rel).stem) for m in MOTS_DICTIONNAIRE):
-            info(f"Si « {rel} » ne contient aucune donnée personnelle (dictionnaire des variables…), Claude peut le lire tel quel :")
+            info(f"Si « {rel} » ne contient aucune donnée personnelle (dictionnaire des variables…), l'IA peut le lire tel quel :")
             info(f"  sosie creer --copier-tel-quel \"{Path(rel).name}\"")
     for tp in profil_ok.get("tables", []):
         nom_t = tp["fichier"] + (f" [{tp['feuille']}]" if tp.get("feuille") else "")
@@ -723,9 +723,9 @@ def creer_sosie(args):
         except OSError:
             statut_md = None
         if statut_md == "mis_a_jour":
-            bien("Consignes pour Claude (CLAUDE.md) mises à jour pour cette version de sosie.")
+            bien("Consignes pour l'IA (CLAUDE.md) mises à jour pour cette version de sosie.")
         elif statut_md in ("cree", "ajoute"):
-            bien("Consignes pour Claude ajoutées à CLAUDE.md.")
+            bien("Consignes pour l'IA ajoutées à CLAUDE.md.")
         options = [f"--garder {' '.join(garder)}" if garder else "", f"--copier-tel-quel {' '.join(copier_tel_quel)}" if copier_tel_quel else "",
                    f"--cle-individu {' '.join(cles_individu)}" if cles_individu else ""]
         options = [o for o in options if o]
@@ -756,11 +756,11 @@ def signaler_donnees_exposees(racine, tables, seuil):
             individuels.append(rel)
     if reels:
         print()
-        alerte(style("VRAIES DONNÉES DANS LE PROJET (Claude peut les lire) : ", "31") + ", ".join(reels[:10]))
+        alerte(style("VRAIES DONNÉES DANS LE PROJET (l'IA peut les lire) : ", "31") + ", ".join(reels[:10]))
         info("Déplace-les dans le coffre (ou supprime-les) tout de suite.")
     if individuels:
         print()
-        alerte("Fichiers du projet qui ressemblent à des données individuelles (Claude peut les lire) : " + ", ".join(individuels[:10]))
+        alerte("Fichiers du projet qui ressemblent à des données individuelles (l'IA peut les lire) : " + ", ".join(individuels[:10]))
         info("S'ils viennent des vraies données, déplace-les dans le coffre ; s'ils sont fictifs ou publics, ignore ce message.")
 
 
@@ -815,9 +815,9 @@ def cmd_executer(args):
         if not precis:
             info("L'erreur peut venir du code, ou d'une différence entre les vraies données et le sosie (modalité")
             info("inattendue, texte dans une colonne de nombres, colonne vide, doublons…).")
-        info("Pour corriger avec Claude sans lui montrer les données :")
-        info("  1. sosie verifier   (le journal est copié pour Claude s'il ne contient rien d'identifiant)")
-        info(f"  2. Demande à Claude : « Lis resultats_verifies/{dossier.name}/journal.txt et corrige le script. »")
+        info("Pour corriger avec l'IA sans lui montrer les données :")
+        info("  1. sosie verifier   (le journal est copié pour l'IA s'il ne contient rien d'identifiant)")
+        info(f"  2. Demande à l'IA : « Lis resultats_verifies/{dossier.name}/journal.txt et corrige le script. »")
         info(f"  Le message d'erreur exact est dans le journal (coffre) : open -e \"{dossier / JOURNAL}\"")
     produits = infos.get("produits") or []
     if produits:
@@ -830,13 +830,13 @@ def cmd_executer(args):
         alerte(f"{len(infos['quarantaine'])} fichier(s) écrit(s) par le script DANS le projet (chemin absolu ?) ont été "
                f"déplacés dans le coffre ({dossier / 'quarantaine'}) : " + ", ".join(infos["quarantaine"][:5]))
     if infos["signales"]:
-        alerte("Fichiers du projet créés ou modifiés pendant l'exécution (par le script ou par Claude en même temps) : "
+        alerte("Fichiers du projet créés ou modifiés pendant l'exécution (par le script ou par l'IA en même temps) : "
                + ", ".join(infos["signales"][:5]) + " — vérifie qu'ils ne contiennent pas de vraies données.")
     if infos.get("exterieurs"):
         alerte("Fichiers écrits HORS du coffre pendant l'exécution (chemin absolu dans le script ?) : "
                + ", ".join(infos["exterieurs"][:5]))
-        info("Ils peuvent contenir de vraies données lisibles par Claude : vérifie-les et déplace-les dans le coffre.")
-    info("Avant de montrer quoi que ce soit à Claude : sosie verifier")
+        info("Ils peuvent contenir de vraies données lisibles par l'IA : vérifie-les et déplace-les dans le coffre.")
+    info("Avant de montrer quoi que ce soit à l'IA : sosie verifier")
     if plateforme_mac() and args.ouvrir:
         subprocess.run(["open", str(dossier)], check=False)
     return code
@@ -859,7 +859,7 @@ def controler_avant_execution(racine, config):
             recents = [p.name for p in donnees.rglob("*") if p.is_file() and not p.name.startswith(".") and p.stat().st_mtime > cree + 2]
             if recents:
                 alerte(f"Les vraies données ont changé depuis la fabrication du sosie ({', '.join(recents[:3])}) : "
-                       "relance « sosie creer » pour que Claude travaille sur la bonne structure.")
+                       "relance « sosie creer » pour que l'IA travaille sur la bonne structure.")
     candidats = fichiers_de_donnees_du_projet(racine, references=True) + fichiers_de_donnees_du_projet(racine)
     if not candidats:
         return
@@ -888,10 +888,10 @@ def controler_avant_execution(racine, config):
     if bloques:
         raise ErreurSosie(
             "Ces fichiers du projet contiennent de vraies données (identifiants, noms ou dates de naissance réels) et "
-            f"Claude peut les lire : {', '.join(bloques[:5])}. Déplace-les dans {donnees} (ou supprime-les), puis relance."
+            f"L'IA peut les lire : {', '.join(bloques[:5])}. Déplace-les dans {donnees} (ou supprime-les), puis relance."
         )
     if individuels:
-        alerte("Ces fichiers du projet ressemblent à des données individuelles (Claude peut les lire) : "
+        alerte("Ces fichiers du projet ressemblent à des données individuelles (l'IA peut les lire) : "
                + ", ".join(individuels[:5]) + ". S'ils viennent des vraies données, déplace-les dans le coffre.")
 
 
@@ -947,9 +947,9 @@ def cmd_verifier(args):
                 print(f"       → {conseil}")
     print()
     if copies:
-        bien(f"{len(copies)} fichier(s) partageable(s) copié(s) pour Claude dans : {destination}")
+        bien(f"{len(copies)} fichier(s) partageable(s) copié(s) pour l'IA dans : {destination}")
     else:
-        info(f"Aucun fichier copié pour Claude. Le bilan (sans valeur réelle) est dans {destination / 'VERIFICATION.md'}")
+        info(f"Aucun fichier copié pour l'IA. Le bilan (sans valeur réelle) est dans {destination / 'VERIFICATION.md'}")
     restes = [r for r in resultats if r["fichier"] not in copies]
     if restes:
         alerte(f"{len(restes)} fichier(s) gardé(s) dans le coffre. Détails (avec les valeurs) : {dossier / 'VERIFICATION_DETAILLEE.md'}")
@@ -977,7 +977,7 @@ def cmd_pseudonymiser(args):
             "Ajoute --forcer si tu sais ce que tu fais (ex. transfert encadré à un co-investigateur)."
         )
     if racine is not None and est_dans(sortie, racine):
-        raise ErreurSosie("Interdit : la sortie serait dans le dossier du projet, que Claude lit.")
+        raise ErreurSosie("Interdit : la sortie serait dans le dossier du projet, que l'IA lit.")
     rapport, ecrits, ignores, avertissements, correspondance, n = pseudonymiser(
         source, sortie, coffre_projet, seuil_du_projet(args, config), args.decaler_dates, args.naissance, args.garder_texte,
         args.forcer_colonne or [], args.cle_individu)
@@ -1014,7 +1014,7 @@ def cmd_reidentifier(args):
     else:
         destination = coffre_projet / "reidentifie" / f"{fichier.stem}_reidentifie{fichier.suffix}"
     if racine is not None and est_dans(destination, racine):
-        raise ErreurSosie("Interdit : la sortie serait dans le dossier du projet, que Claude lit.")
+        raise ErreurSosie("Interdit : la sortie serait dans le dossier du projet, que l'IA lit.")
     if destination.resolve() == fichier:
         raise ErreurSosie("La sortie doit être un autre fichier que l'entrée.")
     if not est_dans(destination, coffre):
@@ -1255,12 +1255,12 @@ def construire_analyseur():
 
     c = sous.add_parser("executer", aliases=["exécuter"], help="lance un ou plusieurs scripts sur les vraies données, dans le coffre")
     c.add_argument("--ouvrir", action="store_true", help="ouvrir le dossier de l'exécution à la fin")
-    c.add_argument("--afficher", action="store_true", help="afficher la sortie du script (vraies données !) : jamais dans un terminal lu par Claude")
+    c.add_argument("--afficher", action="store_true", help="afficher la sortie du script (vraies données !) : jamais dans un terminal lu par l'IA")
     c.add_argument("cible", nargs=argparse.REMAINDER,
                    help="script(s) (.R, .py, .qmd, .Rmd, .ipynb, .sh) à lancer à la suite, puis les arguments du dernier ; ou -- commande")
     c.set_defaults(fonction=cmd_executer)
 
-    c = sous.add_parser("verifier", aliases=["vérifier"], help="contrôle les résultats d'une exécution avant de les montrer à Claude")
+    c = sous.add_parser("verifier", aliases=["vérifier"], help="contrôle les résultats d'une exécution avant de les montrer à l'IA")
     c.add_argument("execution", nargs="?", help="nom de l'exécution (par défaut : la dernière)")
     c.add_argument("--seuil", type=int, default=None, help=f"effectif minimal autorisé (défaut : celui du projet, {SEUIL_DEFAUT})")
     c.add_argument("--forcer", nargs="+", metavar="FICHIER", help="copier quand même ces fichiers après les avoir vérifiés toi-même")
@@ -1357,7 +1357,7 @@ def main(argv=None):
         print(style("✗ ", "31") + f"Erreur inattendue de sosie ({type(e).__name__}, {lieu_erreur(e)}).", file=sys.stderr)
         if chemin:
             print(f"  Détails techniques (dans le coffre, ils peuvent contenir des valeurs réelles) : {chemin}", file=sys.stderr)
-        print("  Tu peux copier les deux lignes ci-dessus à Claude pour obtenir de l'aide (pas le fichier de détails).", file=sys.stderr)
+        print("  Tu peux copier les deux lignes ci-dessus à l'IA pour obtenir de l'aide (pas le fichier de détails).", file=sys.stderr)
         return 1
 
 
