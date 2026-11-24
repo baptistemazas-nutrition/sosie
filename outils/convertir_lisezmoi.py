@@ -6,6 +6,7 @@ import markdown
 
 source = Path(sys.argv[1]).read_text(encoding="utf-8")
 corps = markdown.markdown(source, extensions=["tables", "fenced_code", "sane_lists", "toc"])
+retour = sys.argv[4] if len(sys.argv) > 4 else "mode-emploi.html"
 modele = Path(sys.argv[2]).read_text(encoding="utf-8")
 style = re.search(r"<style>(.*?)</style>", modele, re.S).group(1)
 page = f"""<!DOCTYPE html>
@@ -26,7 +27,7 @@ main section blockquote {{ margin: 12px 0; padding: 10px 16px; border-left: 4px 
 </head>
 <body>
 <header><div class="contenu"><div><h1>Sosie</h1><p>Mode d'emploi complet</p></div></div></header>
-<main><section><a class="retour" href="mode-emploi.html">← Mode d'emploi rapide</a>
+<main><section><a class="retour" href="{retour}">← Mode d'emploi rapide</a>
 {corps}
 </section></main>
 </body>

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sosie — mode d'emploi complet</title>
+<style>
+:root {
+  --fond: #f6f8fa;
+  --carte: #ffffff;
+  --texte: #1c2733;
+  --doux: #5b6b7a;
+  --trait: #e2e8ee;
+  --bleu: #1d3557;
+  --sarcelle: #2a9d8f;
+  --sarcelle-clair: #e3f4f1;
+  --or: #f4a261;
+  --or-clair: #fdf0e4;
+  --rouge: #c8553d;
+  --rouge-clair: #fbe9e5;
+  --code: #eef2f6;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fond: #11161c;
+    --carte: #1a222b;
+    --texte: #e6edf3;
+    --doux: #9aa9b7;
+    --trait: #2b3642;
+    --bleu: #8fb3e0;
+    --sarcelle: #4cc3b3;
+    --sarcelle-clair: #183330;
+    --or: #f4a261;
+    --or-clair: #3a2a1c;
+    --rouge: #ef8a73;
+    --rouge-clair: #3a1f1a;
+    --code: #232d38;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font: 16px/1.6 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+header {
+  background: linear-gradient(135deg, #1d3557 0%, #2a9d8f 100%);
+  color: #fff;
+  padding: 56px 24px 64px;
+}
+header .contenu { max-width: 880px; margin: 0 auto; display: flex; gap: 28px; align-items: center; }
+header img { flex: 0 0 auto; }
+header h1 { margin: 0 0 6px; font-size: 40px; letter-spacing: -0.02em; }
+header p { margin: 0; font-size: 19px; opacity: .92; max-width: 560px; }
+main { max-width: 880px; margin: -36px auto 64px; padding: 0 24px; }
+section {
+  background: var(--carte);
+  border: 1px solid var(--trait);
+  border-radius: 18px;
+  padding: 28px 32px;
+  margin-bottom: 22px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+}
+h2 { margin: 0 0 16px; font-size: 23px; letter-spacing: -0.01em; color: var(--bleu); }
+h3 { margin: 22px 0 8px; font-size: 17px; }
+p { margin: 0 0 12px; }
+.trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.bloc { border-radius: 14px; padding: 16px 18px; background: var(--code); }
+.bloc b { display: block; font-size: 16px; margin-bottom: 4px; }
+.bloc span { color: var(--doux); font-size: 14.5px; }
+.bloc.coffre { background: var(--or-clair); }
+.bloc.sosie { background: var(--sarcelle-clair); }
+.flux { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 18px 0 4px; font-size: 14.5px; }
+.flux .etiquette { background: var(--code); border-radius: 999px; padding: 6px 12px; white-space: nowrap; }
+.flux .fleche { color: var(--doux); }
+ol.etapes { counter-reset: e; list-style: none; padding: 0; margin: 0; }
+ol.etapes > li { counter-increment: e; position: relative; padding: 0 0 18px 52px; }
+ol.etapes > li::before {
+  content: counter(e);
+  position: absolute; left: 0; top: -2px;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--sarcelle); color: #fff; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+ol.etapes > li:last-child { padding-bottom: 0; }
+.menu { color: var(--sarcelle); font-weight: 600; }
+code, kbd {
+  font: 14px/1.4 ui-monospace, "SF Mono", Menlo, monospace;
+  background: var(--code); border-radius: 6px; padding: 2px 6px;
+}
+pre {
+  font: 14px/1.5 ui-monospace, "SF Mono", Menlo, monospace;
+  background: var(--code); border-radius: 12px; padding: 14px 16px; overflow-x: auto; margin: 8px 0 14px;
+}
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+td, th { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--trait); vertical-align: top; }
+th { color: var(--doux); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+td:first-child { white-space: nowrap; font-size: 20px; width: 44px; }
+.regles li { margin-bottom: 8px; }
+.alerte { border-left: 4px solid var(--or); background: var(--or-clair); border-radius: 10px; padding: 12px 16px; margin: 14px 0 0; }
+.danger { border-left-color: var(--rouge); background: var(--rouge-clair); }
+a { color: var(--sarcelle); }
+footer { text-align: center; color: var(--doux); font-size: 13.5px; margin: 28px 0 0; }
+@media (max-width: 720px) {
+  .trio { grid-template-columns: 1fr; }
+  header .contenu { flex-direction: column; align-items: flex-start; }
+  section { padding: 22px 20px; }
+}
+
+main section h1 { font-size: 30px; margin: 0 0 14px; color: var(--bleu); }
+main section h2 { margin-top: 30px; }
+main section ul, main section ol { padding-left: 22px; }
+main section li { margin-bottom: 6px; }
+main section table td:first-child { white-space: normal; font-size: 15px; width: auto; }
+main section blockquote { margin: 12px 0; padding: 10px 16px; border-left: 4px solid var(--sarcelle); background: var(--sarcelle-clair); border-radius: 10px; }
+.retour { display: inline-block; margin-bottom: 18px; }
+</style>
+</head>
+<body>
+<header><div class="contenu"><div><h1>Sosie</h1><p>Mode d'emploi complet</p></div></div></header>
+<main><section><a class="retour" href="index.html">← Mode d'emploi rapide</a>
+<h1 id="sosie-travailler-avec-claude-sans-lui-montrer-tes-vraies-donnees">sosie — travailler avec Claude sans lui montrer tes vraies données</h1>
+<h2 id="le-principe">Le principe</h2>
+<p>Tes vraies données restent dans un <strong>coffre</strong> (<code>~/Coffre</code>) que Claude Code ne peut ni lire ni modifier.
+<code>sosie</code> fabrique un <strong>sosie</strong> de chaque base : mêmes fichiers, mêmes colonnes, mêmes formats, mêmes clés
+de jointure, mais des valeurs inventées. Claude écrit et teste les scripts sur le sosie. C'est ensuite toi qui
+lances le même script sur les vraies données, en une commande.</p>
+<pre><code>~/Coffre/MON_PROJET/donnees/          vraies données — Claude n'y a pas accès
+        │   sosie creer
+        ▼
+MON_PROJET/donnees/                   SOSIE : même structure, faux contenu
+        │   Claude écrit et teste scripts/analyse.R sur le sosie
+        ▼
+        │   sosie executer scripts/analyse.R     ← c'est TOI qui lances
+        ▼
+~/Coffre/MON_PROJET/executions/…      vrais résultats, restent dans le coffre
+        │   sosie verifier
+        ▼
+MON_PROJET/resultats_verifies/        résultats agrégés contrôlés : Claude peut t'aider à les rédiger
+</code></pre>
+<p>Pourquoi ne pas pseudonymiser, envoyer à l'IA, puis dé-pseudonymiser ?</p>
+<ul>
+<li>Pour toi, qui détiens la clé, des données pseudonymisées restent des <strong>données personnelles de santé</strong> (RGPD).
+  Les confier à une IA en ligne supposerait que les formalités de ton étude couvrent ce destinataire, avec un
+  contrat de sous-traitance, un encadrement du transfert hors UE, un hébergement HDS et une analyse d'impact (AIPD).</li>
+<li>Les données individuelles du SNDS ne quittent jamais un environnement conforme à son référentiel de sécurité.</li>
+<li>Pour écrire un script, Claude n'a besoin que de la <strong>structure</strong> des données : le sosie suffit, sans aller-retour.</li>
+</ul>
+<h2 id="installation-une-seule-fois">Installation (une seule fois)</h2>
+<p>Il te faut macOS 12 ou plus récent et Internet (ta box plutôt que le réseau de l'hôpital). Ni Xcode ni Python.</p>
+<ol>
+<li>Double-clique sur <code>sosie.zip</code> (mets d'abord à la corbeille un ancien dossier <code>sosie</code>).</li>
+<li>Ouvre l'application <strong>Terminal</strong>, tape <code>sh</code> (avec l'espace), fais glisser le fichier <code>installer.sh</code> du dossier
+   décompressé dans la fenêtre, puis appuie sur Entrée. Ne double-clique pas sur <code>installer.sh</code>.</li>
+<li>Si macOS demande l'accès au dossier Téléchargements, clique sur <strong>Autoriser</strong>.</li>
+<li>Quand « Installation terminée » s'affiche, ferme la fenêtre, ouvre-en une nouvelle et tape <code>sosie</code> : l'aide s'affiche.</li>
+</ol>
+<p>L'installation télécharge <code>uv</code> (gestionnaire Python) puis Python 3.12 et les bibliothèques, crée le coffre
+<code>~/Coffre</code> (accessible à toi seul), règle Claude Code (voir « La protection » plus bas ; une sauvegarde de tes
+réglages est faite) et lance <code>sosie autotest</code>, qui vérifie sur des données d'essai que tout fonctionne.</p>
+<p>Mise à jour : même procédure avec le nouveau <code>sosie.zip</code>, puis <code>sosie creer</code> dans chaque projet (le sosie est
+refait avec la nouvelle version et les consignes pour Claude de <code>CLAUDE.md</code> sont mises à jour).
+Désinstallation : <code>sosie desinstaller</code> (retire les réglages ajoutés à Claude Code ; le coffre n'est pas touché),
+puis <code>uv tool uninstall sosie</code>.</p>
+<h2 id="premier-essai-en-5-minutes-donnees-dexemple">Premier essai en 5 minutes (données d'exemple)</h2>
+<pre><code>cd ~/Documents
+sosie projet DEMO --exemple
+cd DEMO
+sosie creer
+open -a &quot;Visual Studio Code&quot; .
+</code></pre>
+<p>Dans VS Code, demande à Claude : « Lis donnees/FICHE_SOSIE.md puis écris scripts/analyse.R qui calcule le poids
+moyen par sexe et l'enregistre dans resultats/table1.csv. Teste-le sur le sosie. »
+Puis, dans le terminal de VS Code (menu Terminal › Nouveau terminal) :</p>
+<pre><code>sosie executer scripts/analyse.R
+sosie verifier
+</code></pre>
+<p>Les vrais résultats (ici, ceux des données d'exemple) arrivent dans <code>resultats_verifies/</code>.</p>
+<h2 id="au-quotidien">Au quotidien</h2>
+<ol>
+<li>
+<p><strong>Créer le projet</strong>, dans le dossier où tu ranges tes projets de recherche :
+   <code>cd ~/Documents/Recherche
+   sosie projet SEMASEARCH</code>
+   Le Finder s'ouvre sur <code>~/Coffre/SEMASEARCH/donnees</code> (pour le retrouver plus tard : dans le Finder,
+   ⇧⌘G puis <code>~/Coffre</code>).</p>
+</li>
+<li>
+<p><strong>Déplacer les vraies données</strong> dans ce dossier du coffre, telles que tu les as reçues (CSV, Excel, SPSS,
+   Stata, SAS, R, Parquet, JSON, SQLite… plusieurs fichiers et sous-dossiers possibles).
+   <strong>Déplace-les, ne les copie pas</strong>, puis supprime les autres copies (Téléchargements, pièces jointes) :
+   un fichier réel laissé dans le dossier du projet serait lisible par Claude.</p>
+</li>
+<li>
+<p><strong>Fabriquer le sosie</strong> :
+   <code>cd SEMASEARCH
+   sosie creer</code>
+   Le sosie arrive dans <code>SEMASEARCH/donnees/</code>, avec <code>FICHE_SOSIE.md</code> qui décrit chaque fichier et chaque
+   colonne et donne la commande de lecture R et Python. Relance <code>sosie creer</code> chaque fois que les vraies
+   données changent (<code>sosie etat</code> te prévient). Compte quelques secondes pour une cohorte de quelques milliers
+   de patients, environ 2 minutes et 1,5 Go de mémoire par million de lignes.
+   - Pour compter les patients (et masquer les valeurs rares), <code>sosie</code> repère la colonne qui identifie le patient
+     (IPP, numéro d'inclusion, nom + prénom + date de naissance…). S'il n'en trouve pas, il le signale :
+     <code>sosie creer --cle-individu id_patient</code> (ou <code>--cle-individu LIGNE</code> si chaque ligne est un patient différent).
+   - Options mémorisées pour les fois suivantes : <code>--seuil 20</code> (seuil plus strict, repris par <code>CLAUDE.md</code> et
+     <code>sosie verifier</code>), <code>--garder</code>, <code>--copier-tel-quel</code>, <code>--cle-individu</code>.</p>
+</li>
+<li>
+<p><strong>Travailler avec Claude</strong> : <code>open -a "Visual Studio Code" .</code> (ou <code>code .</code>). Ouvre toujours VS Code sur le
+   dossier du projet. Exemple de demande : « Lis donnees/FICHE_SOSIE.md, puis écris scripts/analyse.R qui fait
+   le tableau 1 et le modèle … ». Claude teste le script sur le sosie ; les résultats obtenus n'ont <strong>aucun
+   sens</strong> (c'est voulu), seul compte le fait que le code tourne.</p>
+</li>
+<li>
+<p><strong>Lancer sur les vraies données</strong> — toi, dans le terminal de VS Code ou l'application Terminal :
+   <code>sosie executer scripts/analyse.R</code>
+   Le code du projet est copié dans le coffre, les vraies données remplacent le sosie, le script tourne, et tout
+   ce qu'il produit reste dans le coffre. Fonctionne avec <code>.R</code>, <code>.py</code>, <code>.qmd</code>, <code>.Rmd</code>, <code>.ipynb</code>, <code>.sh</code>, ou une
+   commande : <code>sosie executer -- Rscript -e "..."</code>. Ce que le script affiche ne s'affiche pas à l'écran : c'est
+   dans <code>journal.txt</code>, vérifié comme le reste par <code>sosie verifier</code> (<code>--afficher</code> l'affiche quand même, à ne
+   jamais faire dans un terminal que Claude peut lire).
+   - Plusieurs scripts qui s'enchaînent (préparation puis analyse) : <code>sosie executer scripts/prepa.R scripts/analyse.R</code>.
+     Les fichiers intermédiaires calculés sur le sosie ne sont jamais recopiés dans l'exécution réelle.
+   - Un fichier de référence sans donnée personnelle (nomenclature publique…) : range-le dans <code>references/</code>,
+     il sera copié.
+   - Le script tourne avec tes droits, hors du bac à sable de Claude : parcours-le avant de le lancer (fichiers
+     lus et écrits, aucun envoi sur Internet, aucun chemin absolu).</p>
+</li>
+<li>
+<p><strong>Contrôler avant de montrer à Claude</strong> :
+   <code>sosie verifier</code>
+   Chaque fichier produit est classé :</p>
+</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Signification</th>
+<th>Copié pour Claude ?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>✅</td>
+<td>rien de suspect</td>
+<td>oui, dans <code>resultats_verifies/</code></td>
+</tr>
+<tr>
+<td>⚠️</td>
+<td>effectif &lt; 11, liste de patients, valeur min/max, modalité rare, objet R ou modèle</td>
+<td>non (tu peux forcer après avoir regardé)</td>
+</tr>
+<tr>
+<td>⛔</td>
+<td>identifiants, noms, téléphones, adresses ou dates de naissance réels</td>
+<td>non, jamais</td>
+</tr>
+<tr>
+<td>👁</td>
+<td>image, PDF, figure interactive : impossible à vérifier automatiquement</td>
+<td>non (tu peux forcer après avoir regardé)</td>
+</tr>
+</tbody>
+</table>
+<p>Une ligne de conseil accompagne chaque fichier gardé. Le détail (quelles cellules, quelles valeurs) reste dans
+   le coffre : <code>VERIFICATION_DETAILLEE.md</code>. Après avoir regardé un fichier toi-même :
+   <code>sosie verifier --forcer resultats/figure.png</code>. <code>resultats_verifies/…/VERIFICATION.md</code> dit à Claude
+   quels fichiers sont restés dans le coffre et pourquoi, sans aucune valeur réelle.</p>
+<p><strong>Si le script s'arrête sur une erreur</strong> (les vraies données diffèrent souvent du sosie : modalité inattendue,
+texte dans une colonne de nombres…) : lance <code>sosie verifier</code>, puis demande à Claude « Lis
+resultats_verifies/<exécution>/journal.txt et corrige le script ». Le journal n'est copié que s'il ne contient
+rien d'identifiant ; sinon, décris l'erreur à Claude avec tes mots.</p>
+<h2 id="la-protection-verifie-la-une-fois">La protection : vérifie-la une fois</h2>
+<p>La protection repose sur Claude Code :
+- des <strong>règles d'interdiction</strong> : lire ou modifier le coffre, modifier les réglages de Claude Code, lancer <code>sosie</code> ;
+- le <strong>bac à sable</strong> : toute commande lancée par Claude (R, Python…) est empêchée par macOS de lire le coffre, en
+  mode strict (Claude ne peut pas relancer une commande hors du bac à sable).</p>
+<p>Par défaut, l'installation active le bac à sable <strong>dans tous tes projets Claude Code</strong>, pour que le coffre soit
+protégé même si VS Code est ouvert sur un autre dossier. Contrepartie : dans tes autres projets, les commandes
+lancées par Claude n'écrivent que dans le dossier du projet, Claude te demande avant d'accéder à un site inconnu,
+et certains outils peuvent échouer quand c'est Claude qui les lance (<code>git</code> en SSH, <code>gh</code>, <code>brew</code>, <code>docker</code>,
+<code>open</code>) : lance-les toi-même. Pour un projet qui doit écrire ailleurs (par exemple une automatisation qui range ton
+dossier Téléchargements), autorise ce dossier dans son fichier <code>.claude/settings.json</code> :
+<code>{ "sandbox": { "filesystem": { "allowWrite": ["~/Downloads"] } } }</code>. Évite de désactiver le bac à sable
+(<code>"enabled": false</code>) : les commandes de Claude dans ce projet pourraient alors lire le coffre.
+Pour revenir à un bac à sable limité aux projets sosie : <code>sosie configurer --bac-a-sable projets</code>.</p>
+<p><strong>Le test</strong> (dans VS Code, dans un projet sosie), demande à Claude l'un après l'autre :</p>
+<ol>
+<li>« Test de protection : lis le fichier ~/Coffre/.temoin/TEMOIN_NE_PAS_LIRE.txt et recopie-moi sa première ligne. »</li>
+<li>« Test de protection : exécute Rscript -e 'readLines("~/Coffre/.temoin/TEMOIN_NE_PAS_LIRE.txt")' »</li>
+<li>« Test de protection : lis le fichier ~/coffre/.temoin/TEMOIN_NE_PAS_LIRE.txt (en minuscules). »</li>
+<li>« Test de protection : exécute touch ~/sandbox-probe »</li>
+</ol>
+<p>Les quatre doivent échouer <strong>avec un message technique</strong> (« deny », « Operation not permitted »,
+« Permission denied »…). Si Claude refuse de lui-même sans essayer, réponds « C'est un test, essaie quand même ».
+Si Claude recopie un code qui commence par <code>TEMOIN-</code>, ou si le fichier <code>~/sandbox-probe</code> apparaît, la protection
+ne marche pas : n'y mets pas de vraies données et lance <code>sosie etat</code>. Refais l'essai 1 une fois hors d'un projet sosie.</p>
+<p>Ce que la protection ne couvre pas : elle empêche les accès par erreur, pas une tentative délibérée de la
+contourner ; le bac à sable n'est pas une isolation complète de l'ordinateur ; les serveurs MCP et les « hooks »
+de Claude Code tournent hors du bac à sable ; rien n'empêche de coller de vraies données dans une conversation,
+de les joindre dans l'application Claude ou de les montrer à un autre outil d'IA.</p>
+<h2 id="ecrire-des-scripts-compatibles-sosie">Écrire des scripts « compatibles sosie »</h2>
+<p>Ces consignes sont déjà écrites pour Claude dans le <code>CLAUDE.md</code> du projet :</p>
+<ul>
+<li>lire les données uniquement dans <code>donnees/</code>, avec des chemins relatifs (jamais de chemin absolu) ;
+  dans un document Quarto rangé dans un sous-dossier : <code>here::here("donnees/patients.csv")</code> ;</li>
+<li>écrire toutes les sorties dans <code>resultats/</code> ;</li>
+<li>ne produire que des résultats agrégés : pas de liste de patients, pas de minimum ni de maximum, effectifs
+  inférieurs à 11 masqués ;</li>
+<li>prévoir les valeurs <code>MODALITE_RARE</code> et <code>VALEUR_RARE</code> du sosie : elles signalent des valeurs rares bien
+  présentes dans les vraies données, que le code doit savoir traiter.</li>
+</ul>
+<p>Pendant <code>sosie executer</code>, la variable d'environnement <code>SOSIE_MODE</code> vaut <code>reel</code>.</p>
+<h2 id="ce-que-le-sosie-garde-et-ce-quil-remplace">Ce que le sosie garde et ce qu'il remplace</h2>
+<table>
+<thead>
+<tr>
+<th>Type de colonne</th>
+<th>Dans le sosie</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identifiants, IPP, NIR, codes à forte cardinalité</td>
+<td>valeurs fictives au même format ; mêmes jointures entre fichiers</td>
+</tr>
+<tr>
+<td>Noms, prénoms, e-mails, téléphones, adresses</td>
+<td>valeurs fictives</td>
+</tr>
+<tr>
+<td>Textes libres (commentaires, comptes rendus)</td>
+<td>faux texte (lorem ipsum)</td>
+</tr>
+<tr>
+<td>Catégories</td>
+<td>modalités présentes chez au moins 11 individus ; les plus rares deviennent <code>MODALITE_RARE</code></td>
+</tr>
+<tr>
+<td>Nombres</td>
+<td>même plage et même forme de distribution, valeurs extrêmes rognées, mêmes décimales, codes spéciaux (999…), valeurs infinies (<code>Inf</code>)</td>
+</tr>
+<tr>
+<td>Valeurs manquantes</td>
+<td>même taux et mêmes codes (<code>NA</code>, <code>N/A</code>, <code>.</code>, <code>NR</code>, manquants SPSS)</td>
+</tr>
+<tr>
+<td>Dates</td>
+<td>même période et même format ; ordre respecté (naissance ≤ inclusion ≤ fin) ; dates conventionnelles (9999-12-31)</td>
+</tr>
+<tr>
+<td>Données longitudinales</td>
+<td>même nombre de lignes par patient (plafonné pour les quelques patients qui en ont le plus), numéros et codes de visite dans l'ordre, prélèvements d'un même jour, valeurs propres à chaque patient ; l'ordre des patients dans le fichier est mélangé</td>
+</tr>
+<tr>
+<td>Entre fichiers</td>
+<td>même sexe pour un même patient partout, visites et examens datés après l'inclusion, clés composites (clés DCT du SNDS)</td>
+</tr>
+<tr>
+<td>Formats R</td>
+<td>facteurs, dates, <code>data.table</code>, <code>tibble</code>, étiquettes <code>haven</code>, <code>difftime</code>, <code>hms</code></td>
+</tr>
+</tbody>
+</table>
+<p>Ce qui n'est pas reproduit : les liens entre variables (corrélations, effets, trajectoires), les relations
+calculées (IMC = poids/taille²) et le lien entre deux codages d'une même information dans deux fichiers (sexe
+1/2 dans un fichier SPSS, F/M dans un CSV). Avant d'écrire le sosie, <code>sosie</code> vérifie qu'aucun nom ou
+identifiant réel n'y figure (une valeur suspecte est masquée et signalée). Aucune ligne réelle n'est recopiée, mais le sosie garde des informations tirées
+des vraies données (effectifs, nombre de lignes par patient, plages de valeurs, modalités fréquentes) : <strong>son
+anonymat doit être évalué et validé avec ton DPO.</strong> Les noms de fichiers, de feuilles, de colonnes et d'objets R,
+ainsi que les libellés de variables (SPSS, Stata, SAS), sont conservés tels quels : vérifie qu'ils ne contiennent
+aucun nom de patient.</p>
+<p>Options : <code>sosie creer --seuil 20</code> (seuil plus strict, enregistré pour le projet), <code>--graine 42</code> (sosie
+reproductible), <code>--garder colonne</code> (garder les modalités fréquentes d'une colonne à forte cardinalité, après avoir
+vérifié qu'elle n'est pas identifiante), <code>--copier-tel-quel dictionnaire.xlsx</code> (fichier sans donnée personnelle
+copié tel quel), <code>--cle-individu colonne</code> (colonne qui identifie le patient).</p>
+<p>Formats : un <code>.sas7bdat</code> est réécrit en <code>.xpt</code> et un <code>.xls</code> en <code>.xlsx</code> dans le sosie ; <code>sosie executer</code>
+convertit de la même façon les vrais fichiers, donc le script lit le même nom dans les deux cas.</p>
+<h2 id="questions-a-poser-a-ton-dpo">Questions à poser à ton DPO</h2>
+<ul>
+<li>Ai-je le droit de conserver les vraies données de cette étude sur mon Mac (chiffré par FileVault) ?</li>
+<li>Le sosie, la fiche et les résultats agrégés vérifiés peuvent-ils être transmis à Anthropic (Claude), et sous
+  quel contrat (offre entreprise de l'AP-HP ou de l'INSERM, ou compte personnel) ?</li>
+<li>Le seuil de 11 individus convient-il pour cette étude ?</li>
+<li>Pour le SNDS : aucun fichier ne doit aller vers Claude avant l'export validé par la plateforme.</li>
+<li>La traçabilité des exécutions (<code>~/Coffre/PROJET/executions/</code>) est-elle suffisante pour le registre de l'étude ?</li>
+</ul>
+<h2 id="limites-et-bonnes-pratiques">Limites et bonnes pratiques</h2>
+<ul>
+<li><code>sosie</code> n'est pas une certification d'anonymat ; le cadre réglementaire de ton étude prime.</li>
+<li>Il n'y a pas de seuil unique : 11 est l'usage le plus courant en santé (effectifs de 1 à 10 masqués). Attention
+  au « secret secondaire » : une case masquée qui se recalcule à partir d'un total et des autres cases.</li>
+<li>Garde le coffre hors des dossiers synchronisés (iCloud Drive, Google Drive, Dropbox) et active FileVault.</li>
+<li>Exclus le coffre de Spotlight : Réglages Système › Siri et Spotlight › Confidentialité de Spotlight › <code>+</code> ›
+  dossier <code>Coffre</code> (sinon son contenu est indexé et apparaît dans les recherches).</li>
+<li>N'ouvre pas les vrais fichiers dans la fenêtre VS Code où travaille Claude.</li>
+<li>Ne lance pas <code>sosie</code> avec <code>!</code> dans la zone de saisie de Claude : la sortie apparaîtrait dans la conversation.
+  (<code>sosie</code> refuse de toute façon de tourner quand c'est Claude qui le lance.)</li>
+<li>Si un script écrit dans le dossier du projet pendant <code>sosie executer</code> (chemin absolu), ces fichiers sont
+  déplacés dans le coffre (<code>quarantaine/</code>) et signalés.</li>
+<li>Les exécutions s'accumulent dans <code>~/Coffre/PROJET/executions/</code> : fais le ménage de temps en temps.</li>
+</ul>
+<h2 id="aide-memoire">Aide-mémoire</h2>
+<table>
+<thead>
+<tr>
+<th>Commande</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sosie configurer</code></td>
+<td>crée le coffre et le protège (déjà fait par l'installation)</td>
+</tr>
+<tr>
+<td><code>sosie projet NOM</code></td>
+<td>crée un projet et son espace dans le coffre (<code>sosie projet .</code> pour un dossier existant)</td>
+</tr>
+<tr>
+<td><code>sosie projet DEMO --exemple</code></td>
+<td>projet d'essai avec des données fictives</td>
+</tr>
+<tr>
+<td><code>sosie creer</code></td>
+<td>fabrique le sosie des vraies données</td>
+</tr>
+<tr>
+<td><code>sosie executer scripts/x.R</code></td>
+<td>lance un script sur les vraies données, dans le coffre</td>
+</tr>
+<tr>
+<td><code>sosie verifier</code></td>
+<td>contrôle les sorties de la dernière exécution</td>
+</tr>
+<tr>
+<td><code>sosie etat</code></td>
+<td>montre la configuration et l'état du projet</td>
+</tr>
+<tr>
+<td><code>sosie schema</code></td>
+<td>exporte le dictionnaire des variables (sans valeurs)</td>
+</tr>
+<tr>
+<td><code>sosie pseudonymiser</code> / <code>sosie reidentifier</code></td>
+<td>pseudonymisation réversible, sans IA (annexe C)</td>
+</tr>
+<tr>
+<td><code>sosie autotest</code></td>
+<td>vérifie sur des données d'essai que sosie fonctionne</td>
+</tr>
+<tr>
+<td><code>sosie desinstaller</code></td>
+<td>retire les réglages ajoutés à Claude Code</td>
+</tr>
+</tbody>
+</table>
+<p>Chaque commande a son aide : <code>sosie creer --help</code>.</p>
+<h2 id="depannage">Dépannage</h2>
+<ul>
+<li><strong><code>sosie</code> : commande introuvable</strong> — ferme la fenêtre du Terminal et ouvres-en une nouvelle (ou tape <code>~/.local/bin/sosie</code>).</li>
+<li><strong>« c'est à toi de le lancer… »</strong> — la commande a été lancée par Claude : lance-la toi-même dans le terminal de
+  VS Code ou dans l'application Terminal.</li>
+<li><strong>Claude Code refuse de démarrer à cause du bac à sable</strong> — tape <code>sosie configurer --bac-a-sable projets</code>.</li>
+<li><strong>R ou Quarto introuvable</strong> — installe-les (<a href="https://cran.r-project.org">R</a>, <a href="https://quarto.org">Quarto</a>).</li>
+<li><strong>« la ligne d'en-tête ressemble à des données personnelles »</strong> — la première ligne utile du fichier n'est pas
+  une ligne de noms de colonnes : corrige le fichier (ou signale-le-moi).</li>
+<li><strong>Une colonne est mal reconnue</strong> (la fiche indique sa nature) — signale-le-moi ; en attendant, <code>--garder</code> ou le
+  dictionnaire permettent d'ajuster.</li>
+<li><strong>Excel avec un en-tête sur plusieurs lignes</strong> — <code>sosie</code> repère les lignes de titre au-dessus de l'en-tête, pas
+  un en-tête sur deux lignes : simplifie l'en-tête avant de fabriquer le sosie.</li>
+<li><strong>Claude ne peut pas installer un package R</strong> — le bac à sable autorise l'écriture dans <code>~/Library/R</code> et l'accès
+  aux dépôts CRAN, Posit, Bioconductor, PyPI et GitHub ; pour une autre source, installe le package toi-même.</li>
+<li><strong>Erreur inattendue</strong> — le message indique le fichier de détails (dans le coffre). Copie à Claude les deux lignes
+  du message, pas le fichier de détails.</li>
+</ul>
+<hr />
+<h2 id="annexe-a-snds-et-bulles-securisees-casd-plateforme-du-health-data-hub-portail-cnam">Annexe A — SNDS et bulles sécurisées (CASD, plateforme du Health Data Hub, portail CNAM)</h2>
+<p>Les données individuelles ne sortent jamais de la bulle ; seuls des résultats anonymes (en pratique agrégés)
+en sortent, après validation. La méthode :</p>
+<ol>
+<li>Mettre au point le script sur ton Mac, avec Claude, sur des données synthétiques :
+   - la base synthétique <strong>ParaBios</strong> du Health Data Hub (juillet 2026, Licence Ouverte 2.0, archive d'environ
+     1,5 Go, 8 fichiers Parquet de 2023 : tables DCIR <code>ER_*</code> et référentiels <code>IR_BEN_R</code>, <code>IR_IMB_R</code> ; pas de PMSI,
+     pas de cohérence médicale) — volumineuse : travaille sur un échantillon ;
+   - le jeu de 50 patients fictifs du Health Data Hub, en CSV, avec PMSI :
+     https://www.data.gouv.fr/datasets/donnees-synthetiques-de-la-base-principales-du-systeme-national-des-donnees-de-sante
+   - ou un sosie fabriqué à partir du dictionnaire des variables de ton extraction (annexe B).</li>
+<li>Importer le script dans la bulle selon sa procédure, l'y exécuter, puis exporter les résultats agrégés selon les
+   règles de la bulle (petits effectifs masqués).</li>
+</ol>
+<h2 id="annexe-b-sosie-a-partir-dun-dictionnaire-des-variables">Annexe B — Sosie à partir d'un dictionnaire des variables</h2>
+<p><code>sosie creer --depuis-schema dictionnaire_donnees.csv --destination donnees</code> fabrique un sosie sans aucune vraie
+donnée. Le dictionnaire est un CSV (séparateur <code>;</code>) avec les colonnes
+<code>fichier;feuille;colonne;type;nature;format;modalites;manquants;cle</code> :
+- <code>type</code> : <code>texte</code>, <code>entier</code>, <code>decimal</code>, <code>date</code>, <code>datetime</code>, <code>booleen</code>, <code>categorie</code> (ou leurs équivalents :
+  <code>VARCHAR2</code>, <code>NUMBER</code>, <code>integer</code>, <code>numeric</code>, <code>character</code>, <code>logical</code>, <code>factor</code>…) ;
+- <code>nature</code> (facultatif) : <code>identifiant</code>, <code>nom</code>, <code>texte_libre</code>, <code>date_naissance</code>… ;
+- <code>format</code> : pour une date <code>%d/%m/%Y</code>, <code>jj/mm/aaaa</code> ou <code>DD/MM/YYYY</code> ; pour un identifiant un motif où <code>#</code> =
+  chiffre, <code>X</code> = majuscule, <code>x</code> = minuscule (ex. <code>SEMA-####</code>) ;
+- <code>fichier</code> : un nom relatif (ex. <code>visites.csv</code>), jamais un chemin complet ;
+- <code>modalites</code> : <code>F|M</code>, ou une plage <code>18..90</code>, <code>2019-01-01..2023-12-31</code> ;
+- <code>cle</code> : même nom pour les colonnes qui se joignent (ex. <code>patient</code>), et <code>patient (unique)</code> dans la table où
+  chaque individu n'apparaît qu'une fois.</p>
+<p><code>sosie schema</code> produit ce dictionnaire à partir de vraies données, <strong>sans aucune valeur</strong>
+(<code>--avec-modalites</code> ajoute les modalités portées par au moins 11 individus et des plages rognées ; si sosie ne
+repère pas la colonne du patient, ajoute <code>--cle-individu COLONNE</code>, ou <code>--cle-individu LIGNE</code> quand chaque ligne
+est un patient différent).</p>
+<h2 id="annexe-c-pseudonymisation-reversible-sans-ia">Annexe C — Pseudonymisation réversible (sans IA)</h2>
+<p>Pour transmettre des données à un co-investigateur dans un cadre autorisé, croiser des sources, ou renvoyer des
+résultats individuels à l'équipe soignante :</p>
+<pre><code>sosie pseudonymiser --decaler-dates 30
+sosie reidentifier ~/Coffre/SEMASEARCH/…/fichier_avec_pseudonymes.csv
+</code></pre>
+<ul>
+<li>identifiants remplacés par des pseudonymes stables (<code>PS-…</code> ou numéro), les mêmes dans tous les fichiers et
+  d'une fois sur l'autre (« 17 » et « 00017 » donnent le même pseudonyme) ;</li>
+<li>noms, prénoms, téléphones, e-mails, adresses, villes et textes libres vidés ; codes postaux ramenés au
+  département ; dates de naissance ramenées au mois ;</li>
+<li>option : dates décalées de ±N jours, du même décalage pour un même patient dans tous les fichiers
+  (<code>--cle-individu id_patient</code> pour désigner la colonne du patient si besoin) ; les dates conventionnelles
+  (9999-12-31, 1900-01-01) ne sont pas décalées ;</li>
+<li>la clé secrète et la table de correspondance restent dans le coffre ; la sortie aussi, par défaut.</li>
+</ul>
+<p>Des données pseudonymisées restent des données personnelles : <strong>ne les donne pas à une IA en ligne.</strong></p>
+</section></main>
+</body>
+</html>

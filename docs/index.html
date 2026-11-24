@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sosie — travailler avec Claude sans lui montrer les vraies données</title>
+<meta name="description" content="Sosie range les vraies données de santé dans un coffre, fabrique un jumeau fictif pour que Claude écrive les scripts, puis vérifie les résultats avant de les lui montrer.">
+<link rel="icon" type="image/png" href="icone.png">
+<style>
+:root {
+  --fond: #f5f7f9;
+  --carte: #ffffff;
+  --encre: #17222d;
+  --doux: #5a6b7b;
+  --trait: #e1e7ed;
+  --nuit: #1d3557;
+  --sarcelle: #2a9d8f;
+  --sarcelle-fonce: #217e73;
+  --sarcelle-clair: #e2f3f0;
+  --ambre: #f4a261;
+  --ambre-clair: #fdf0e3;
+  --corail: #e76f51;
+  --corail-clair: #fbe8e3;
+  --violet-clair: #ece9fb;
+  --violet: #6c5ce7;
+  --code: #edf1f5;
+  --ombre: 0 1px 2px rgba(16, 24, 40, .05), 0 8px 24px rgba(16, 24, 40, .06);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fond: #0f141a;
+    --carte: #18212b;
+    --encre: #e7edf3;
+    --doux: #9babba;
+    --trait: #283442;
+    --nuit: #9fc2ec;
+    --sarcelle: #4cc3b3;
+    --sarcelle-fonce: #6fd4c6;
+    --sarcelle-clair: #15312d;
+    --ambre-clair: #36281b;
+    --corail-clair: #3a201a;
+    --violet-clair: #25223f;
+    --violet: #a99ff5;
+    --code: #222d39;
+    --ombre: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--encre);
+  font: 16.5px/1.6 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--sarcelle-fonce); }
+code, kbd, pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+code { background: var(--code); border-radius: 6px; padding: 1px 6px; font-size: .9em; }
+
+nav.haut {
+  position: sticky; top: 0; z-index: 20;
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  background: color-mix(in srgb, var(--fond) 78%, transparent);
+  border-bottom: 1px solid var(--trait);
+}
+nav.haut .rangee { max-width: 1120px; margin: 0 auto; padding: 10px 24px; display: flex; align-items: center; gap: 22px; }
+nav.haut .marque { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--encre); text-decoration: none; letter-spacing: -.01em; }
+nav.haut .marque img { width: 30px; height: 30px; }
+nav.haut .liens { display: flex; gap: 18px; margin-left: auto; font-size: 15px; }
+nav.haut .liens a { color: var(--doux); text-decoration: none; }
+nav.haut .liens a:hover { color: var(--encre); }
+
+header.heros {
+  position: relative; overflow: hidden;
+  background: radial-gradient(1200px 500px at 85% -10%, rgba(42,157,143,.55), transparent 60%), linear-gradient(135deg, #14263f 0%, #1d3557 45%, #23766d 100%);
+  color: #fff;
+}
+header.heros::after {
+  content: ""; position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: linear-gradient(180deg, rgba(0,0,0,.7), transparent 85%);
+  pointer-events: none;
+}
+header.heros .contenu { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; padding: 84px 24px 96px; display: grid; grid-template-columns: 1.25fr .75fr; gap: 40px; align-items: center; }
+.etiquette-version { display: inline-flex; gap: 8px; align-items: center; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 5px 12px; font-size: 13.5px; margin-bottom: 22px; }
+header.heros h1 { font-size: clamp(38px, 6vw, 62px); line-height: 1.04; letter-spacing: -.035em; margin: 0 0 18px; }
+header.heros h1 em { font-style: normal; color: #8ee3d6; }
+header.heros p.chapo { font-size: 20px; opacity: .92; max-width: 600px; margin: 0 0 30px; }
+.boutons { display: flex; gap: 12px; flex-wrap: wrap; }
+.bouton {
+  display: inline-flex; align-items: center; gap: 8px;
+  border-radius: 12px; padding: 12px 20px; font-weight: 600; font-size: 15.5px;
+  text-decoration: none; border: 1px solid transparent; cursor: pointer; font-family: inherit;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.bouton:hover { transform: translateY(-1px); }
+.bouton.plein { background: #fff; color: #1d3557; box-shadow: 0 8px 24px rgba(0,0,0,.18); }
+.bouton.clair { background: rgba(255,255,255,.1); color: #fff; border-color: rgba(255,255,255,.3); }
+.bouton.action { background: var(--sarcelle); color: #fff; }
+.bouton.action:hover { background: var(--sarcelle-fonce); }
+.bouton.discret { background: var(--code); color: var(--encre); }
+.icone-heros { justify-self: center; width: min(300px, 70vw); filter: drop-shadow(0 30px 50px rgba(0,0,0,.35)); animation: flotte 7s ease-in-out infinite; }
+@keyframes flotte { 50% { transform: translateY(-10px) rotate(-1deg); } }
+
+main { max-width: 1120px; margin: 0 auto; padding: 0 24px 40px; }
+section { padding: 84px 0 8px; }
+.surtitre { color: var(--sarcelle-fonce); font-weight: 700; font-size: 13.5px; text-transform: uppercase; letter-spacing: .09em; margin: 0 0 10px; }
+h2 { font-size: clamp(28px, 3.6vw, 40px); letter-spacing: -.025em; line-height: 1.12; margin: 0 0 14px; }
+.intro { color: var(--doux); font-size: 18px; max-width: 760px; margin: 0 0 34px; }
+.carte { background: var(--carte); border: 1px solid var(--trait); border-radius: 20px; box-shadow: var(--ombre); }
+
+.cycle { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.etape {
+  text-align: left; padding: 20px; cursor: pointer; font-family: inherit; color: inherit;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+.etape:hover { transform: translateY(-2px); }
+.etape[aria-pressed="true"] { border-color: var(--sarcelle); box-shadow: 0 0 0 3px color-mix(in srgb, var(--sarcelle) 25%, transparent), var(--ombre); }
+.etape .numero { display: inline-flex; width: 30px; height: 30px; border-radius: 50%; background: var(--sarcelle-clair); color: var(--sarcelle-fonce); font-weight: 800; align-items: center; justify-content: center; font-size: 14px; }
+.etape .emoji { font-size: 30px; display: block; margin: 12px 0 6px; }
+.etape b { display: block; font-size: 17px; margin-bottom: 4px; }
+.etape span { color: var(--doux); font-size: 14.5px; }
+.detail-etape { margin-top: 16px; padding: 24px 28px; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.detail-etape h3 { margin: 0 0 8px; font-size: 21px; }
+.detail-etape p { margin: 0 0 10px; color: var(--doux); }
+.qui { display: grid; gap: 10px; }
+.qui div { display: flex; gap: 12px; align-items: flex-start; background: var(--code); border-radius: 12px; padding: 10px 14px; font-size: 15px; }
+.qui div b { min-width: 64px; }
+
+.demo { padding: 26px; }
+.demo-barre { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 18px; }
+.demo-barre .espace { flex: 1; }
+.bascule { display: inline-flex; align-items: center; gap: 10px; font-size: 15px; color: var(--doux); cursor: pointer; user-select: none; }
+.bascule input { appearance: none; width: 42px; height: 24px; border-radius: 999px; background: var(--trait); position: relative; cursor: pointer; transition: background .2s; margin: 0; }
+.bascule input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s; }
+.bascule input:checked { background: var(--sarcelle); }
+.bascule input:checked::after { transform: translateX(18px); }
+.tables { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.fleche-demo { text-align: center; color: var(--doux); font-size: 14px; font-weight: 600; }
+.fleche-demo span { display: inline-block; background: var(--code); border-radius: 999px; padding: 4px 14px; }
+.table-boite { position: relative; border: 1px solid var(--trait); border-radius: 14px; overflow: hidden; min-width: 0; }
+.table-boite .titre-table { display: flex; align-items: center; gap: 8px; padding: 10px 14px; font-weight: 700; font-size: 14.5px; border-bottom: 1px solid var(--trait); }
+.table-boite.vraie .titre-table { background: var(--ambre-clair); }
+.table-boite.jumelle .titre-table { background: var(--sarcelle-clair); }
+.defile { overflow-x: auto; }
+table.donnees { border-collapse: collapse; width: 100%; font-size: 13px; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+table.donnees th { text-align: left; color: var(--doux); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--trait); white-space: nowrap; font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 12.5px; }
+table.donnees td { padding: 7px 10px; border-bottom: 1px solid var(--trait); white-space: nowrap; transition: background .35s, color .35s; }
+table.donnees tr:last-child td { border-bottom: none; }
+td.t-id { background: var(--violet-clair); }
+td.t-nom { background: var(--corail-clair); }
+td.t-date { background: var(--ambre-clair); }
+td.t-valeur { background: var(--sarcelle-clair); }
+td.t-rare { background: #ffe1e1; color: #a1260f; font-weight: 600; }
+@media (prefers-color-scheme: dark) { td.t-rare { background: #4a1f1c; color: #ffb3a5; } }
+td.vide { color: transparent; }
+.voile {
+  position: absolute; inset: 41px 0 0 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  background: color-mix(in srgb, var(--carte) 55%, transparent);
+  backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px);
+  font-weight: 700; color: var(--encre); opacity: 0; pointer-events: none; transition: opacity .35s;
+}
+.voile span { font-size: 34px; }
+.voile small { font-weight: 500; color: var(--doux); }
+.claude-voit .table-boite.vraie .voile { opacity: 1; }
+.legende { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 16px; font-size: 13.5px; color: var(--doux); }
+.legende i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; }
+.note { font-size: 13.5px; color: var(--doux); margin: 14px 0 0; }
+
+.verifs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.fichier {
+  padding: 18px; cursor: pointer; text-align: left; font-family: inherit; color: inherit; position: relative; min-height: 210px;
+  display: flex; flex-direction: column; gap: 10px; transition: transform .2s, border-color .2s;
+}
+.fichier:hover { transform: translateY(-2px); }
+.fichier .nom-fichier { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13.5px; font-weight: 600; }
+.fichier pre { margin: 0; background: var(--code); border-radius: 10px; padding: 10px; font-size: 11.5px; line-height: 1.45; overflow: hidden; white-space: pre; }
+.fichier .verdict { display: none; border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+.fichier.ouvert .verdict { display: block; animation: apparait .3s ease; }
+.fichier.ouvert pre { display: none; }
+.fichier .indice { margin-top: auto; font-size: 13px; color: var(--doux); }
+.fichier.ouvert .indice { display: none; }
+.verdict b { display: block; font-size: 16px; margin-bottom: 4px; }
+.v-ok { background: var(--sarcelle-clair); }
+.v-revoir { background: var(--ambre-clair); }
+.v-bloque { background: var(--corail-clair); }
+.v-voir { background: var(--violet-clair); }
+@keyframes apparait { from { opacity: 0; transform: translateY(6px); } }
+
+.onglets { display: inline-flex; flex-wrap: wrap; background: var(--code); border-radius: 12px; padding: 4px; gap: 4px; margin-bottom: 18px; }
+.onglets button { border: 0; background: transparent; color: var(--doux); font: inherit; font-weight: 600; font-size: 14.5px; padding: 8px 14px; border-radius: 9px; cursor: pointer; }
+.onglets button[aria-selected="true"] { background: var(--carte); color: var(--encre); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.panneau[hidden] { display: none; }
+.pas { list-style: none; counter-reset: p; padding: 0; margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.pas > li { counter-increment: p; position: relative; padding: 18px 20px 18px 66px; }
+.pas > li::before { content: counter(p); position: absolute; left: 18px; top: 18px; width: 32px; height: 32px; border-radius: 50%; background: var(--sarcelle); color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+.pas > li b { display: block; margin-bottom: 4px; }
+.pas > li p { margin: 0; color: var(--doux); }
+.commande { display: flex; align-items: center; gap: 10px; background: #0f1720; color: #d6e2ee; border-radius: 12px; padding: 10px 10px 10px 16px; margin-top: 10px; font-size: 14px; }
+.commande code { background: none; padding: 0; color: inherit; flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; }
+.copier { border: 0; background: rgba(255,255,255,.1); color: #fff; border-radius: 8px; padding: 6px 10px; font: inherit; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
+.copier:hover { background: rgba(255,255,255,.2); }
+
+.quotidien { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.quotidien .carte { padding: 18px 20px; }
+.quotidien .carte b { display: flex; gap: 10px; align-items: center; font-size: 16.5px; }
+.quotidien .carte p { margin: 6px 0 0; color: var(--doux); font-size: 14.5px; }
+
+.regles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.regles .carte { padding: 20px; }
+.regles .carte span { font-size: 26px; }
+.regles .carte b { display: block; margin: 8px 0 4px; font-size: 16.5px; }
+.regles .carte p { margin: 0; color: var(--doux); font-size: 14.5px; }
+
+details { background: var(--carte); border: 1px solid var(--trait); border-radius: 16px; padding: 0 20px; margin-bottom: 10px; }
+details summary { cursor: pointer; padding: 16px 0; font-weight: 650; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+details summary::-webkit-details-marker { display: none; }
+details summary::after { content: "+"; color: var(--sarcelle); font-size: 22px; line-height: 1; transition: transform .2s; }
+details[open] summary::after { transform: rotate(45deg); }
+details p { margin: 0 0 16px; color: var(--doux); }
+
+footer { border-top: 1px solid var(--trait); margin-top: 80px; padding: 30px 24px 50px; text-align: center; color: var(--doux); font-size: 14px; }
+footer a { color: var(--doux); }
+
+@media (max-width: 920px) {
+  header.heros .contenu { grid-template-columns: 1fr; padding: 56px 24px 64px; }
+  .icone-heros { width: 180px; order: -1; justify-self: start; }
+  .cycle, .verifs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .detail-etape, .quotidien { grid-template-columns: minmax(0, 1fr); }
+  .regles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  nav.haut .liens { display: none; }
+}
+@media (max-width: 560px) {
+  .cycle, .verifs, .regles { grid-template-columns: minmax(0, 1fr); }
+  .pas > li { padding: 16px 16px 16px 60px; }
+  body { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body>
+
+<nav class="haut">
+  <div class="rangee">
+    <a class="marque" href="#"><img src="icone.png" alt="">Sosie</a>
+    <div class="liens">
+      <a href="#principe">Principe</a>
+      <a href="#demo">Démonstration</a>
+      <a href="#verification">Vérification</a>
+      <a href="#installer">Installer</a>
+      <a href="#faq">Questions</a>
+      <a href="https://github.com/baptistemazas-nutrition/sosie">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<header class="heros">
+  <div class="contenu">
+    <div>
+      <div class="etiquette-version">🔒 Outil local pour Mac · version 1.2.0</div>
+      <h1>Travaille avec Claude sur tes bases, <em>sans jamais lui montrer les vraies.</em></h1>
+      <p class="chapo">Sosie range les vraies données dans un coffre, fabrique un jumeau fictif de ta base pour que Claude écrive les scripts, puis vérifie tout ce qui ressort avant de le lui montrer.</p>
+      <div class="boutons">
+        <a class="bouton plein" href="#installer">Installer sur mon Mac</a>
+        <a class="bouton clair" href="#demo">Voir la démonstration</a>
+      </div>
+    </div>
+    <img class="icone-heros" src="icone.png" alt="Icône de Sosie : un tableau et son jumeau, avec un cadenas">
+  </div>
+</header>
+
+<main>
+
+<section id="principe">
+  <p class="surtitre">Le principe</p>
+  <h2>Un cycle en quatre temps</h2>
+  <p class="intro">Clique sur chaque étape pour voir qui fait quoi. Les vraies données ne quittent jamais ton Mac et Claude ne les lit jamais.</p>
+  <div class="cycle" role="group" aria-label="Étapes du cycle">
+    <button class="etape carte" data-etape="0" aria-pressed="true"><span class="numero">1</span><span class="emoji">🔒</span><b>Le coffre</b><span>Les vraies données y sont rangées, hors de portée de Claude.</span></button>
+    <button class="etape carte" data-etape="1" aria-pressed="false"><span class="numero">2</span><span class="emoji">🧬</span><b>Le sosie</b><span>Un jumeau fictif : même structure, aucune vraie personne.</span></button>
+    <button class="etape carte" data-etape="2" aria-pressed="false"><span class="numero">3</span><span class="emoji">▶️</span><b>L'exécution</b><span>Le script de Claude tourne sur les vraies données.</span></button>
+    <button class="etape carte" data-etape="3" aria-pressed="false"><span class="numero">4</span><span class="emoji">✅</span><b>La vérification</b><span>Seuls les résultats sans risque reviennent à Claude.</span></button>
+  </div>
+  <div class="detail-etape carte" id="detail-etape" aria-live="polite"></div>
+</section>
+
+<section id="demo">
+  <p class="surtitre">Démonstration</p>
+  <h2>Fabrique un sosie</h2>
+  <p class="intro">Voici une petite base entièrement inventée. Appuie sur le bouton : chaque colonne est traitée selon sa nature. Puis active « Ce que voit Claude ».</p>
+  <div class="demo carte" id="zone-demo">
+    <div class="demo-barre">
+      <button class="bouton action" id="fabriquer">🧬 Fabriquer le sosie</button>
+      <button class="bouton discret" id="refaire" hidden>↻ Refaire (nouveau tirage)</button>
+      <span class="espace"></span>
+      <label class="bascule"><input type="checkbox" id="vue-claude"> Ce que voit Claude</label>
+    </div>
+    <div class="tables">
+      <div class="table-boite vraie">
+        <div class="titre-table">🔒 Vraies données · dans le coffre</div>
+        <div class="defile"><table class="donnees" id="table-vraie"></table></div>
+        <div class="voile"><span>🔒</span>Invisible pour Claude<small>le coffre lui est interdit</small></div>
+      </div>
+      <div class="fleche-demo"><span>↓ sosie creer</span></div>
+      <div class="table-boite jumelle">
+        <div class="titre-table">🧬 Sosie · dans le projet</div>
+        <div class="defile"><table class="donnees" id="table-sosie"></table></div>
+      </div>
+    </div>
+    <div class="legende">
+      <span><i style="background:var(--violet-clair)"></i>identifiant remplacé, même format</span>
+      <span><i style="background:var(--corail-clair)"></i>nom inventé</span>
+      <span><i style="background:var(--ambre-clair)"></i>date tirée dans la même décennie</span>
+      <span><i style="background:var(--sarcelle-clair)"></i>valeur tirée dans la distribution</span>
+      <span><i style="background:#ffe1e1"></i>modalité rare masquée</span>
+      <span><i style="background:transparent;border:1px solid var(--trait)"></i>modalité fréquente gardée</span>
+    </div>
+    <p class="note">Illustration simplifiée : les lignes du sosie sont aussi mélangées, aucune ne correspond à une vraie personne. Dans ta vraie base, une modalité portée par moins de 11 patients est remplacée par MODALITE_RARE, les jointures entre fichiers, l'ordre des visites, les formats (CSV, Excel, SAS, SPSS, Stata, Parquet, R…) et les pièges (virgules décimales, « &lt;4,0 », codes 999) sont reproduits. Rien n'est envoyé : cette page tourne entièrement dans ton navigateur.</p>
+  </div>
+</section>
+
+<section id="verification">
+  <p class="surtitre">La vérification</p>
+  <h2>Que dirait Sosie de ces résultats ?</h2>
+  <p class="intro">Ton script a tourné sur les vraies données et a produit quatre fichiers. Clique sur chacun pour voir le verdict de la vérification, avant que Claude ne voie quoi que ce soit.</p>
+  <div class="verifs">
+    <button class="fichier carte">
+      <span class="nom-fichier">imc_par_groupe.csv</span>
+<pre>groupe,n,imc_moyen
+contrôle,154,38.4
+intervention,158,37.9</pre>
+      <span class="indice">Cliquer pour vérifier</span>
+      <div class="verdict v-ok"><b>✅ Partageable</b>Des effectifs ≥ 11, aucune information identifiante : le fichier est copié dans <code>resultats_verifies/</code>.</div>
+    </button>
+    <button class="fichier carte">
+      <span class="nom-fichier">effets_par_centre.csv</span>
+<pre>centre,effet,n
+A,nausées,48
+B,pancréatite,3
+C,nausées,61</pre>
+      <span class="indice">Cliquer pour vérifier</span>
+      <div class="verdict v-revoir"><b>⚠️ À revoir</b>Une case vaut 3 : un petit effectif peut désigner quelqu'un. Demande à Claude de regrouper ou d'afficher « &lt;11 », ou force après relecture.</div>
+    </button>
+    <button class="fichier carte">
+      <span class="nom-fichier">liste_patients.csv</span>
+<pre>id_patient,nom,poids
+SEMA-0042,DUPUIS A.,112.4
+SEMA-0107,KONATE M.,98.1</pre>
+      <span class="indice">Cliquer pour vérifier</span>
+      <div class="verdict v-bloque"><b>⛔ Bloqué</b>De vrais identifiants et de vrais noms : le fichier reste dans le coffre. Ne le montre jamais à Claude, corrige le script.</div>
+    </button>
+    <button class="fichier carte">
+      <span class="nom-fichier">courbe_survie.png</span>
+<pre>🖼  image PNG
+   1200 × 800</pre>
+      <span class="indice">Cliquer pour vérifier</span>
+      <div class="verdict v-voir"><b>👁 À regarder toi-même</b>Une image ne se vérifie pas automatiquement (effectifs sous la courbe ?). Regarde-la, puis transmets-la si elle est sans risque.</div>
+    </button>
+  </div>
+</section>
+
+<section id="installer">
+  <p class="surtitre">Installer</p>
+  <h2>Prêt en quelques minutes</h2>
+  <p class="intro">Il faut un Mac (macOS 12 ou plus récent) et une connexion Internet le temps de l'installation. Tout s'installe dans ton dossier personnel, sans mot de passe administrateur.</p>
+  <div class="onglets" role="tablist">
+    <button role="tab" aria-selected="true" data-panneau="p-desktop">GitHub Desktop</button>
+    <button role="tab" aria-selected="false" data-panneau="p-terminal">Terminal</button>
+    <button role="tab" aria-selected="false" data-panneau="p-zip">Sans GitHub</button>
+  </div>
+  <div class="panneau" id="p-desktop" role="tabpanel">
+    <ol class="pas">
+      <li class="carte"><b>Clone le dépôt</b><p>Dans GitHub Desktop : <i>File → Clone Repository… → URL</i>, puis colle :</p>
+        <div class="commande"><code>https://github.com/baptistemazas-nutrition/sosie</code><button class="copier">Copier</button></div></li>
+      <li class="carte"><b>Lance l'installation</b><p>Dans le dossier cloné (<i>Repository → Show in Finder</i>), double-clique sur <code>Installer Sosie.command</code>. Une fenêtre de Terminal installe l'outil, le coffre, la protection de Claude Code et l'application, puis fait un essai complet sur des données fictives.</p></li>
+      <li class="carte"><b>Ouvre Sosie</b><p>L'application est dans le Dock et le Launchpad. Choisis <b>Nouveau projet</b>, donne un nom, indique ta base : elle part dans le coffre, le sosie est fabriqué et le projet s'ouvre dans VS Code.</p></li>
+    </ol>
+  </div>
+  <div class="panneau" id="p-terminal" role="tabpanel" hidden>
+    <ol class="pas">
+      <li class="carte"><b>Clone et lance</b><p>Dans l'application Terminal :</p>
+        <div class="commande"><code>git clone https://github.com/baptistemazas-nutrition/sosie.git ~/Documents/GitHub/sosie &amp;&amp; open ~/Documents/GitHub/sosie/"Installer Sosie.command"</code><button class="copier">Copier</button></div></li>
+      <li class="carte"><b>Outil seul, sans l'application</b><p>Pour n'installer que la commande <code>sosie</code> (Mac ou Linux) :</p>
+        <div class="commande"><code>cd ~/Documents/GitHub/sosie &amp;&amp; sh installer.sh</code><button class="copier">Copier</button></div></li>
+    </ol>
+  </div>
+  <div class="panneau" id="p-zip" role="tabpanel" hidden>
+    <ol class="pas">
+      <li class="carte"><b>Télécharge l'archive</b><p><a href="https://github.com/baptistemazas-nutrition/sosie/archive/refs/heads/main.zip">sosie-main.zip</a>, puis double-clique dessus pour la décompresser.</p></li>
+      <li class="carte"><b>Ouvre l'installateur</b><p>Fais un <b>clic droit</b> sur <code>Installer Sosie.command</code> → <b>Ouvrir</b> → <b>Ouvrir</b> : macOS demande cette confirmation pour un fichier téléchargé depuis Internet.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section id="quotidien">
+  <p class="surtitre">Au quotidien</p>
+  <h2>L'application, ou une commande</h2>
+  <p class="intro">Chaque action du menu de Sosie existe aussi en commande, à taper dans le terminal de VS Code, dans le dossier du projet. Claude ne lance jamais ces commandes : c'est toi qui touches aux vraies données.</p>
+  <div class="quotidien">
+    <div class="carte"><b>🧬 Refaire le sosie</b><p>Après un changement des vraies données ou une mise à jour de Sosie.</p><div class="commande"><code>sosie creer</code><button class="copier">Copier</button></div></div>
+    <div class="carte"><b>▶️ Lancer un script sur les vraies données</b><p>Le script écrit par Claude, une fois qu'il tourne sur le sosie.</p><div class="commande"><code>sosie executer scripts/analyse.R</code><button class="copier">Copier</button></div></div>
+    <div class="carte"><b>✅ Vérifier les résultats</b><p>Copie dans <code>resultats_verifies/</code> ce qui peut être montré à Claude.</p><div class="commande"><code>sosie verifier</code><button class="copier">Copier</button></div></div>
+    <div class="carte"><b>🩺 État et protection</b><p>Coffre, sosie, dernières exécutions, protection de Claude Code.</p><div class="commande"><code>sosie etat</code><button class="copier">Copier</button></div></div>
+  </div>
+</section>
+
+<section id="regles">
+  <p class="surtitre">Les règles d'or</p>
+  <h2>Six réflexes</h2>
+  <div class="regles">
+    <div class="carte"><span>🔒</span><b>Le coffre, et seulement lui</b><p>Les vraies données ne vivent que dans <code>~/Coffre</code> : Sosie les y déplace pour toi.</p></div>
+    <div class="carte"><span>🚫</span><b>Aucun autre outil d'IA</b><p>N'ajoute jamais le dossier Coffre à l'application Claude, à Codex, à Cursor ou à ChatGPT.</p></div>
+    <div class="carte"><span>✂️</span><b>Pas de copier-coller</b><p>Ne colle jamais une vraie valeur ou un résultat non vérifié dans une conversation.</p></div>
+    <div class="carte"><span>📂</span><b>Le projet, pas tout le disque</b><p>Ouvre VS Code sur le dossier du projet : ce sont ses consignes qui guident Claude.</p></div>
+    <div class="carte"><span>🔢</span><b>Pas de petits effectifs</b><p>Moins de 11 patients dans une case : on regroupe ou on affiche « &lt;11 ».</p></div>
+    <div class="carte"><span>🧪</span><b>Le sosie ne soigne personne</b><p>Ses chiffres n'ont aucun sens clinique : seuls comptent ceux des vraies données vérifiées.</p></div>
+  </div>
+</section>
+
+<section id="faq">
+  <p class="surtitre">Questions</p>
+  <h2>Ce qu'on se demande souvent</h2>
+  <details><summary>Claude peut-il quand même lire mes vraies données ?</summary><p>Non, Claude Code n'y a pas accès. À l'installation, Sosie lui interdit le coffre (règles de refus et bac à sable) et y dépose un fichier témoin qui permet de vérifier la protection. Les seules choses que Claude voit sont le sosie (dans <code>donnees/</code>) et les résultats vérifiés (dans <code>resultats_verifies/</code>). La protection vaut pour Claude Code : n'ouvre jamais le coffre avec un autre outil d'IA.</p></details>
+  <details><summary>Et si mon script plante sur les vraies données alors qu'il marchait sur le sosie ?</summary><p>C'est justement prévu : le sosie reproduit les pièges des vraies données (formats, virgules, valeurs manquantes, codes spéciaux) pour que ça arrive rarement. Si ça plante, la vérification transmet le journal d'erreur à Claude quand il ne contient rien d'identifiant : demande-lui de lire <code>resultats_verifies/</code> et de corriger.</p></details>
+  <details><summary>Quels formats sont pris en charge ?</summary><p>CSV et TXT (séparateurs, encodages et virgules décimales conservés), Excel (feuilles, en-têtes décalés), SAS (sas7bdat, xpt), SPSS (étiquettes et manquants), Stata, Parquet, Feather, R (rds, RData avec facteurs et dates), SQLite et JSON. Les extractions du SNDS sont gérées (clés de jointure, codes, dates).</p></details>
+  <details><summary>Pourquoi Claude Code est-il plus bridé dans mes autres projets ?</summary><p>Par défaut, Sosie active le bac à sable de Claude Code dans tous les projets, pour qu'aucun ne puisse lire le coffre. Si cela te gêne (écriture hors du projet, <code>git push</code>, certains sites), limite-le aux projets Sosie avec <code>sosie configurer --bac-a-sable projets</code>.</p></details>
+  <details><summary>Comment mettre à jour Sosie ?</summary><p>Ouvre Sosie et choisis <b>Réparer ou mettre à jour sosie</b> : la dernière version est récupérée et tout est réinstallé. Refais ensuite le sosie de tes projets pour profiter des corrections.</p></details>
+  <details><summary>Ce que Sosie ne fait pas</summary><p>Il ne reproduit pas les liens entre variables (corrélations, IMC = poids/taille²) : les analyses sur le sosie n'ont pas de sens, seul le code compte. Une même clé écrite différemment selon les fichiers (<code>P-17</code> ici, <code>17</code> là) ne joint qu'environ la moitié des lignes du sosie.</p></details>
+</section>
+
+</main>
+
+<footer>
+  Sosie · outil local, aucune vraie donnée ne quitte ton Mac ·
+  <a href="https://github.com/baptistemazas-nutrition/sosie">code source</a> ·
+  <a href="mode-emploi-complet.html">mode d'emploi complet</a> ·
+  <a href="https://github.com/baptistemazas-nutrition/sosie/blob/main/CHANGELOG.md">nouveautés</a>
+</footer>
+
+<script>
+const etapes = [
+  {
+    titre: "🔒 Le coffre",
+    texte: "Tes vraies données sont rangées dans ~/Coffre/NOM_DU_PROJET. Claude Code a l'interdiction d'y entrer, Spotlight ne l'indexe pas, et un fichier témoin permet de vérifier la protection.",
+    qui: [["Toi", "Tu choisis ta base dans Sosie : elle est déplacée dans le coffre."], ["Sosie", "Protège le coffre et en garde la seule copie."], ["Claude", "N'y a pas accès."]]
+  },
+  {
+    titre: "🧬 Le sosie",
+    texte: "Sosie fabrique un jumeau de ta base dans le dossier du projet : mêmes fichiers, colonnes, types, formats et jointures, mais aucune vraie personne. Une fiche décrit chaque variable pour Claude.",
+    qui: [["Sosie", "Lit les vraies données et fabrique le sosie et sa fiche."], ["Claude", "Lit le sosie, écrit et teste ses scripts dessus."], ["Toi", "Discutes l'analyse avec Claude dans VS Code."]]
+  },
+  {
+    titre: "▶️ L'exécution",
+    texte: "Quand le script tourne sur le sosie, tu le lances sur les vraies données. Il s'exécute dans le coffre : ses résultats y restent tant qu'ils n'ont pas été vérifiés.",
+    qui: [["Toi", "Sosie → « Lancer un script sur les vraies données »."], ["Sosie", "Exécute le script sur les vraies données, dans le coffre."], ["Claude", "Attend : il ne voit encore rien."]]
+  },
+  {
+    titre: "✅ La vérification",
+    texte: "Chaque fichier produit est contrôlé : identifiants, noms, dates de naissance, petits effectifs, lignes individuelles. Seul ce qui est sans risque est copié dans resultats_verifies/.",
+    qui: [["Sosie", "Classe chaque fichier : ✅ partageable, ⚠️ à revoir, ⛔ bloqué, 👁 à regarder."], ["Toi", "Relis les ⚠️ et les 👁 si besoin."], ["Claude", "Lit resultats_verifies/ et interprète."]]
+  }
+];
+const boutonsEtapes = document.querySelectorAll(".etape");
+const detail = document.getElementById("detail-etape");
+function afficherEtape(i) {
+  boutonsEtapes.forEach((b, j) => b.setAttribute("aria-pressed", String(i === j)));
+  const e = etapes[i];
+  detail.innerHTML = `<div><h3>${e.titre}</h3><p>${e.texte}</p></div><div class="qui">${e.qui.map(([q, t]) => `<div><b>${q}</b><span>${t}</span></div>`).join("")}</div>`;
+}
+boutonsEtapes.forEach((b, i) => b.addEventListener("click", () => afficherEtape(i)));
+afficherEtape(0);
+
+const colonnes = ["id_patient", "nom", "naissance", "sexe", "imc", "ville", "traitement"];
+const vraies = [
+  ["SEMA-0042", "DUPUIS Aurélie", "12/03/1961", "F", "41,2", "Créteil", "sémaglutide"],
+  ["SEMA-0107", "KONATE Moussa", "05/11/1974", "M", "38,6", "Paris", "sémaglutide"],
+  ["SEMA-0138", "NGUYEN Linh", "23/07/1988", "F", "44,9", "Paris", "tirzépatide"],
+  ["SEMA-0151", "ROCHE Didier", "30/01/1957", "M", "36,1", "Montreuil", "sémaglutide"],
+  ["SEMA-0203", "BENALI Karima", "17/09/1969", "F", "52,3", "Bourg-sur-Lys", "essai Prader-Willi"],
+  ["SEMA-0219", "VASSEUR Odile", "08/05/1979", "F", "39,8", "Paris", "tirzépatide"],
+  ["SEMA-0264", "TESSIER Hervé", "26/12/1965", "M", "47,0", "Créteil", "sémaglutide"]
+];
+const frequentes = { ville: new Set(["Paris", "Créteil", "Montreuil"]), traitement: new Set(["sémaglutide", "tirzépatide"]) };
+const nomsFictifs = ["LEMAIRE Inès", "FONTAINE Hugo", "GIRARD Chloé", "MOREL Yanis", "BLANC Salomé", "GARNIER Théo", "CHEVALIER Nora", "MERCIER Adam", "ROUSSEL Léna", "BRUNET Sacha", "GAUTIER Maëlle", "PERRIN Noé"];
+let graine = 7;
+function hasard() { graine = (graine * 16807) % 2147483647; return (graine - 1) / 2147483646; }
+function entier(a, b) { return a + Math.floor(hasard() * (b - a + 1)); }
+function deux(n) { return String(n).padStart(2, "0"); }
+function sosieDe() {
+  const pris = new Set(vraies.map(l => l[0]));
+  const noms = [...nomsFictifs].sort(() => hasard() - .5);
+  const imcs = vraies.map(l => parseFloat(l[4].replace(",", "."))).sort((a, b) => a - b);
+  return vraies.map((l, i) => {
+    let id;
+    do { id = "SEMA-" + String(entier(1, 9999)).padStart(4, "0"); } while (pris.has(id));
+    pris.add(id);
+    const annee = parseInt(l[2].slice(6), 10);
+    const decennie = annee - (annee % 10);
+    const date = `${deux(entier(1, 28))}/${deux(entier(1, 12))}/${entier(decennie, decennie + 9)}`;
+    const imc = (imcs[1] + hasard() * (imcs[imcs.length - 2] - imcs[1])).toFixed(1).replace(".", ",");
+    const ville = frequentes.ville.has(l[5]) ? [...frequentes.ville][entier(0, 2)] : "MODALITE_RARE";
+    const traitement = frequentes.traitement.has(l[6]) ? [...frequentes.traitement][entier(0, 1)] : "MODALITE_RARE";
+    return [id, noms[i], date, hasard() < .5 ? "F" : "M", imc, ville, traitement];
+  }).map(l => [hasard(), l]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+}
+const genres = ["t-id", "t-nom", "t-date", "", "t-valeur", "", ""];
+function entete() { return "<thead><tr>" + colonnes.map(c => `<th>${c}</th>`).join("") + "</tr></thead>"; }
+function remplir(table, lignes, vides) {
+  table.innerHTML = entete() + "<tbody>" + lignes.map(l => "<tr>" + l.map(v => `<td class="${vides ? "vide" : ""}">${vides ? "·" : v}</td>`).join("") + "</tr>").join("") + "</tbody>";
+}
+const tableVraie = document.getElementById("table-vraie");
+const tableSosie = document.getElementById("table-sosie");
+remplir(tableVraie, vraies, false);
+remplir(tableSosie, vraies, true);
+const lent = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function fabriquer() {
+  const lignes = sosieDe();
+  remplir(tableSosie, lignes.map(l => l.map(() => "")), true);
+  const cellules = tableSosie.querySelectorAll("tbody td");
+  let k = 0;
+  lignes.forEach((l, i) => l.forEach((v, j) => {
+    const td = cellules[i * colonnes.length + j];
+    const classe = v === "MODALITE_RARE" ? "t-rare" : genres[j];
+    setTimeout(() => { td.textContent = v; td.className = classe; }, lent ? (k++) * 28 : 0);
+  }));
+  document.getElementById("refaire").hidden = false;
+}
+document.getElementById("fabriquer").addEventListener("click", () => { graine = 7; fabriquer(); });
+document.getElementById("refaire").addEventListener("click", () => { graine = Math.floor(Math.random() * 2147483646) + 1; fabriquer(); });
+document.getElementById("vue-claude").addEventListener("change", e => document.getElementById("zone-demo").classList.toggle("claude-voit", e.target.checked));
+
+document.querySelectorAll(".fichier").forEach(f => f.addEventListener("click", () => f.classList.toggle("ouvert")));
+
+document.querySelectorAll(".onglets button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".onglets button").forEach(x => x.setAttribute("aria-selected", String(x === b)));
+  document.querySelectorAll(".panneau").forEach(p => p.hidden = p.id !== b.dataset.panneau);
+}));
+
+document.querySelectorAll(".copier").forEach(b => b.addEventListener("click", async () => {
+  const texte = b.previousElementSibling.textContent;
+  try { await navigator.clipboard.writeText(texte); b.textContent = "Copié ✓"; } catch (e) { b.textContent = "Sélectionne et copie"; }
+  setTimeout(() => { b.textContent = "Copier"; }, 1800);
+}));
+</script>
+</body>
+</html>
