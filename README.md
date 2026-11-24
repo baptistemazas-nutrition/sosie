@@ -4,6 +4,8 @@
 
 <p align="center">Travailler avec Claude sur des bases de données de santé <b>sans jamais lui montrer les vraies</b>.</p>
 
+<p align="center"><a href="https://baptistemazas-nutrition.github.io/sosie/"><b>Site et démonstration interactive</b></a> · <a href="LISEZMOI.md">Mode d'emploi complet</a> · <a href="CHANGELOG.md">Nouveautés</a></p>
+
 Sosie range les vraies données dans un **coffre** que Claude Code ne peut pas lire, fabrique un **sosie** fictif de la base (mêmes fichiers, mêmes colonnes, mêmes formats et mêmes pièges, aucune vraie personne), lance sur les vraies données les scripts que Claude a écrits sur le sosie, puis **vérifie** ce qu'ils produisent avant de le lui montrer.
 
 ```
