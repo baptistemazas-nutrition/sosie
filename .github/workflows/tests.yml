@@ -1,0 +1,55 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      mac:
+        description: "Tester aussi l'installation complète sur macOS (application comprise)"
+        type: boolean
+        default: true
+
+jobs:
+  linux:
+    name: Installation, autotest et non-régression (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - name: Installation avec installer.sh
+        run: sh installer.sh
+      - name: Analyse statique
+        run: |
+          ~/.local/bin/uv tool run pyflakes src tests outils
+          shellcheck -s bash macos/sosie-app.sh macos/construire_app.sh "Installer Sosie.command" "macos/Reconstruire l'application.command" tests/lancer_tests.sh
+          shellcheck -s sh installer.sh
+      - name: R (fichiers .rds et .RData des tests)
+        run: sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends r-base-core
+      - name: Non-régression sur une cohorte fictive
+        run: bash tests/lancer_tests.sh
+
+  macos:
+    name: Installation complète sur Mac (manuel)
+    if: github.event_name == 'workflow_dispatch' && inputs.mac
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - name: Installer Sosie.command, comme un double-clic
+        env:
+          SOSIE_SANS_DOCK: "1"
+        run: bash "Installer Sosie.command" < /dev/null
+      - name: Journal
+        if: always()
+        run: cat journaux/installation.txt
+      - name: Contrôles
+        run: |
+          j=journaux/installation.txt
+          grep '^RESULTAT' "$j"
+          for attendu in "installation=0" "accents=ok" "signature=ok" "essai_creer=0" "essai_executer_py=0" "essai_fuite_noms=aucune" "essai_fuite_ids=aucune" "essai_liste_bloquee=oui" "essai_nettoye=oui" "fin=ok"; do
+            grep -q "^RESULTAT $attendu" "$j" || { echo "Manquant : $attendu"; exit 1; }
+          done
+          grep -q "^RESULTAT application=ok" "$j"
+          test -f "$HOME/Applications/Sosie.app/Contents/Resources/sosie-app.sh"
+          test -f "$HOME/Applications/Sosie.app/Contents/Resources/sosie/installer.sh"
