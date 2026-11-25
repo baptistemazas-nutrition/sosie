@@ -70,3 +70,9 @@ L'IA ne peut pas lancer ces commandes (Sosie refuse) : c'est toi qui touches aux
 - `tests/lancer_tests.sh` : non-régression complète sur une cohorte fictive de 312 patients (une dizaine de formats). À lancer dans le Terminal : sosie refuse volontairement de tourner sous Claude Code.
 - GitHub Actions : à chaque envoi, installation, analyse statique et non-régression sous Linux ; l'installation complète sur Mac (application comprise) se lance à la main depuis l'onglet *Actions*.
 - Conventions : textes et code en français, pas de commentaires dans le code, version dans `src/sosie/__init__.py` et `pyproject.toml`.
+
+## Propriété intellectuelle
+
+© 2026 Baptiste Mazas, tous droits réservés. Sosie s'installe et s'utilise librement à titre personnel ou pour les soins, l'enseignement et la recherche académique. Le code, les textes et le design ne peuvent être ni copiés, ni modifiés, ni redistribués, ni exploités commercialement sans mon accord écrit : voir la [licence](LICENSE).
+
+Vous souhaitez développer ce projet avec moi, l'intégrer à votre offre ou obtenir une licence ? Écrivez-moi sur [LinkedIn](https://www.linkedin.com/in/baptiste-mazas-577219182/).
